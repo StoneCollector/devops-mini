@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CBMS - Admin Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header>
+        <div><h2>CBMS Admin</h2></div>
+        <div>
+            <a th:href="@{/}">Home</a>
+            <a th:href="@{/logout}">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>All Bookings</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Date</th>
+                    <th>Time Slot</th>
+                    <th>Guests</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="booking : ${bookings}">
+                    <td th:text="${booking.user.name}"></td>
+                    <td th:text="${booking.slot.date}"></td>
+                    <td th:text="${booking.slot.timeSlot}"></td>
+                    <td th:text="${booking.numberOfGuests}"></td>
+                    <td th:text="${booking.status}"></td>
+                    <td>
+                        <form th:if="${booking.status.name() == 'PENDING'}" th:action="@{/admin/confirm-booking}" method="post" style="display:inline;">
+                            <input type="hidden" name="bookingId" th:value="${booking.id}">
+                            <button type="submit">Confirm</button>
+                        </form>
+                        <form th:if="${booking.status.name() != 'CANCELLED'}" th:action="@{/cancel-booking}" method="post" style="display:inline;">
+                            <input type="hidden" name="bookingId" th:value="${booking.id}">
+                            <button type="submit" class="btn-danger">Cancel</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(bookings)}">
+                    <td colspan="6">No bookings found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
