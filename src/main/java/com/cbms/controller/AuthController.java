@@ -21,10 +21,34 @@ public class AuthController {
         this.userService = userService;
     }
 
+    @GetMapping("/register")
+    public String registerPage(HttpSession session) {
+        if (session.getAttribute("userId") != null) {
+            return "redirect:/slots";
+        }
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String register(@RequestParam String name,
+                           @RequestParam String email,
+                           @RequestParam String password,
+                           @RequestParam(required = false) String role,
+                           Model model) {
+        try {
+            Role userRole = (role != null && !role.isBlank()) ? Role.valueOf(role.toUpperCase()) : Role.CUSTOMER;
+            userService.register(name, email, password, userRole);
+            return "redirect:/login?registered=true";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "register";
+        }
+    }
+
     @GetMapping("/login")
     public String loginPage(HttpSession session) {
         if (session.getAttribute("userId") != null) {
-            return "redirect:/";
+            return "redirect:/slots";
         }
         return "login";
     }
@@ -39,40 +63,16 @@ public class AuthController {
             session.setAttribute("userId", user.get().getId());
             session.setAttribute("userRole", user.get().getRole().name());
             session.setAttribute("userName", user.get().getName());
-            return "redirect:/";
+            return "redirect:/slots";
         } else {
             model.addAttribute("error", "Invalid email or password");
             return "login";
         }
     }
 
-    @GetMapping("/register")
-    public String registerPage(HttpSession session) {
-        if (session.getAttribute("userId") != null) {
-            return "redirect:/";
-        }
-        return "register";
-    }
-
-    @PostMapping("/register")
-    public String register(@RequestParam String name,
-                           @RequestParam String email,
-                           @RequestParam String password,
-                           @RequestParam String role,
-                           Model model) {
-        try {
-            Role userRole = Role.valueOf(role.toUpperCase());
-            userService.registerUser(name, email, password, userRole);
-            return "redirect:/login?registered=true";
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "register";
-        }
-    }
-
-    @GetMapping("/logout")
+    @PostMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/";
+        return "redirect:/login";
     }
 }

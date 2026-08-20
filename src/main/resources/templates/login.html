@@ -9,7 +9,6 @@
     <header>
         <div><h2>CBMS</h2></div>
         <div>
-            <a th:href="@{/}">Home</a>
             <a th:href="@{/register}">Register</a>
         </div>
     </header>
@@ -22,15 +21,18 @@
 
             <form th:action="@{/login}" method="post">
                 <div class="form-group">
-                    <label>Email:</label>
-                    <input type="email" name="email" required>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" name="password" required>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
                 </div>
                 <button type="submit">Login</button>
             </form>
+            <p style="margin-top: 1rem; text-align: center;">
+                Don't have an account? <a th:href="@{/register}">Register here</a>
+            </p>
         </div>
     </div>
 </body>
