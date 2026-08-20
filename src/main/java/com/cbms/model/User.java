@@ -1,5 +1,6 @@
 package com.cbms.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,21 +18,30 @@ public class User {
     private Long id;
 
     private String name;
+
+    @Column(unique = true, nullable = false)
     private String email;
     
-    // TODO: Hash password in production
+    // TODO: Hash password with BCrypt before any real deployment
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.CUSTOMER;
 
     public User() {}
+
+    public User(String name, String email, String password) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = Role.CUSTOMER;
+    }
 
     public User(String name, String email, String password, Role role) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.role = (role != null) ? role : Role.CUSTOMER;
     }
 
     public Long getId() { return id; }
