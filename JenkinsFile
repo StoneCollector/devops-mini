@@ -9,7 +9,7 @@ pipeline {
         )
         string(
             name: 'DEPLOY_PORT',
-            defaultValue: '8082',
+            defaultValue: '4747',
             description: 'Server HTTP Port to deploy the application on'
         )
         password(
@@ -25,7 +25,7 @@ pipeline {
     }
 
     tools {
-        maven 'Maven-3.9'
+        maven 'Maven-3.9.16'
         jdk 'JDK-21'
     }
 
