@@ -114,7 +114,7 @@ pipeline {
         success {
             echo "=========================================================================="
             echo " PIPELINE SUCCESS: Smart Catering Services deployed to ${params.ENVIRONMENT}!"
-            echo " Application URL: http://localhost:${params.DEPLOY_PORT}/slots"
+            echo " Application URL: http://localhost:${params.DEPLOY_PORT}/"
             echo "=========================================================================="
         }
         failure {
