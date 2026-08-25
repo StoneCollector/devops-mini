@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+    <!-- Reusable Navbar Fragment -->
+    <header th:fragment="header" class="site-header">
+        <div class="header-container">
+            <a th:href="@{/}" class="brand-logo">
+                <span class="brand-icon">🍽️</span>
+                <span class="brand-name">Smart Catering Services</span>
+            </a>
+
+            <nav class="nav-links">
+                <!-- Public / All Roles -->
+                <a th:href="@{/slots}" class="nav-link">Browse Slots</a>
+
+                <!-- Customer Links -->
+                <th:block th:if="${session.userRole == 'CUSTOMER'}">
+                    <a th:href="@{/bookings/me}" class="nav-link">My Bookings</a>
+                </th:block>
+
+                <!-- Vendor Links -->
+                <th:block th:if="${session.userRole == 'VENDOR'}">
+                    <a th:href="@{/vendor/slots}" class="nav-link">My Slots</a>
+                    <a th:href="@{/vendor/slots/new}" class="nav-link btn-nav-action">+ Create Slot</a>
+                    <a th:href="@{/vendor/bookings}" class="nav-link">Bookings on My Slots</a>
+                </th:block>
+
+                <!-- Admin Links -->
+                <th:block th:if="${session.userRole == 'ADMIN'}">
+                    <a th:href="@{/admin/bookings}" class="nav-link">All Bookings</a>
+                    <a th:href="@{/admin/users}" class="nav-link">Manage Users</a>
+                </th:block>
+            </nav>
+
+            <div class="user-controls">
+                <!-- Logged In -->
+                <div th:if="${session.userId != null}" class="user-session-info">
+                    <span class="user-greeting">
+                        <span class="user-name" th:text="${session.userName}">User</span>
+                        <span class="role-badge" 
+                              th:classappend="${session.userRole == 'ADMIN' ? 'badge-admin' : (session.userRole == 'VENDOR' ? 'badge-vendor' : 'badge-customer')}"
+                              th:text="${session.userRole}">ROLE</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post" style="display:inline;">
+                        <button type="submit" class="btn-logout">Logout</button>
+                    </form>
+                </div>
+
+                <!-- Logged Out -->
+                <div th:if="${session.userId == null}" class="auth-buttons">
+                    <a th:href="@{/login}" class="btn btn-outline-light btn-sm">Login</a>
+                    <a th:href="@{/register}" class="btn btn-accent btn-sm">Register</a>
+                </div>
+            </div>
+        </div>
+    </header>
+</body>
+</html>

@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import java.time.LocalDate;
 
 @Entity
@@ -19,6 +21,10 @@ public class CateringSlot {
     private int capacity;
     private int slotsBooked;
 
+    @ManyToOne
+    @JoinColumn(name = "vendor_id")
+    private User vendor;
+
     public CateringSlot() {}
 
     public CateringSlot(LocalDate date, String timeSlot, String menuType, int capacity) {
@@ -27,6 +33,15 @@ public class CateringSlot {
         this.menuType = menuType;
         this.capacity = capacity;
         this.slotsBooked = 0;
+    }
+
+    public CateringSlot(LocalDate date, String timeSlot, String menuType, int capacity, User vendor) {
+        this.date = date;
+        this.timeSlot = timeSlot;
+        this.menuType = menuType;
+        this.capacity = capacity;
+        this.slotsBooked = 0;
+        this.vendor = vendor;
     }
 
     public Long getId() { return id; }
@@ -47,7 +62,11 @@ public class CateringSlot {
     public int getSlotsBooked() { return slotsBooked; }
     public void setSlotsBooked(int slotsBooked) { this.slotsBooked = slotsBooked; }
 
+    public User getVendor() { return vendor; }
+    public void setVendor(User vendor) { this.vendor = vendor; }
+
     public int getAvailableCapacity() {
         return capacity - slotsBooked;
     }
 }
+
