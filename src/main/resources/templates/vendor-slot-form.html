@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isEdit ? 'Edit Catering Slot' : 'Create Catering Slot'} + ' - Smart Catering Services'">Catering Slot Form - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="auth-card-container" style="max-width: 580px;">
+            <div class="card">
+                <div class="page-header" style="margin-bottom: 1.25rem;">
+                    <div class="page-title-group">
+                        <h2 th:text="${isEdit ? 'Edit Catering Slot' : 'Create New Catering Slot'}">Slot Form</h2>
+                        <p class="page-subtitle" th:text="${isEdit ? 'Update details and guest capacity for this slot' : 'Set up a new catering slot for customers to book'}"></p>
+                    </div>
+                </div>
+
+                <!-- Feedback Alert -->
+                <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+
+                <form th:action="${isEdit ? '/vendor/slots/' + slot.id : '/vendor/slots'}" method="post">
+                    <div class="form-group">
+                        <label for="date">Service Date</label>
+                        <input type="date" id="date" name="date" class="form-control" 
+                               th:value="${slot.date}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeSlot">Time Slot</label>
+                        <input type="text" id="timeSlot" name="timeSlot" class="form-control" 
+                               th:value="${slot.timeSlot}" placeholder="e.g. Lunch (12:00 PM - 2:00 PM) or Dinner (7:00 PM - 9:00 PM)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="menuType">Menu Type / Cuisine Offered</label>
+                        <input type="text" id="menuType" name="menuType" class="form-control" 
+                               th:value="${slot.menuType}" placeholder="e.g. Italian Feast, Gourmet Vegetarian, Executive Buffet" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capacity">Total Guest Capacity</label>
+                        <input type="number" id="capacity" name="capacity" class="form-control" 
+                               th:value="${slot.capacity}" min="1" placeholder="e.g. 30" required>
+                        <small th:if="${isEdit and slot.slotsBooked > 0}" style="color: var(--text-muted); display: block; margin-top: 0.35rem;">
+                            Note: <span th:text="${slot.slotsBooked}"></span> seats are already booked. Capacity must be at least this value.
+                        </small>
+                    </div>
+
+                    <div class="actions-group" style="margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary" th:text="${isEdit ? 'Save Changes' : 'Publish Slot'}">Submit</button>
+                        <a th:href="@{/vendor/slots}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>

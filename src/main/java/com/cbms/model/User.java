@@ -1,5 +1,6 @@
 package com.cbms.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,21 +18,44 @@ public class User {
     private Long id;
 
     private String name;
+
+    @Column(unique = true, nullable = false)
     private String email;
     
-    // TODO: Hash password in production
+    // TODO: Hash password with BCrypt before any real deployment
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(name = "role", length = 30)
+    private Role role = Role.CUSTOMER;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     public User() {}
+
+    public User(String name, String email, String password) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = Role.CUSTOMER;
+        this.active = true;
+    }
 
     public User(String name, String email, String password, Role role) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.role = (role != null) ? role : Role.CUSTOMER;
+        this.active = true;
+    }
+
+    public User(String name, String email, String password, Role role, boolean active) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = (role != null) ? role : Role.CUSTOMER;
+        this.active = active;
     }
 
     public Long getId() { return id; }
@@ -48,4 +72,7 @@ public class User {
     
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

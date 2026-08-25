@@ -12,8 +12,8 @@
     <groupId>com.cbms</groupId>
     <artifactId>cbms-mvp</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>CBMS MVP</name>
-    <description>Catering Booking and Management System</description>
+    <name>Smart Catering Services</name>
+    <description>Smart Catering Services Web Application</description>
     <properties>
         <java.version>21</java.version>
     </properties>

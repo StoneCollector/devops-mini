@@ -1,0 +1,123 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['dev', 'staging', 'production'],
+            description: 'Target Deployment Environment'
+        )
+        string(
+            name: 'DEPLOY_PORT',
+            defaultValue: '8082',
+            description: 'Server HTTP Port to deploy the application on'
+        )
+        password(
+            name: 'DB_PASSWORD',
+            defaultValue: 'DOPSnet',
+            description: 'MySQL Database Password'
+        )
+        booleanParam(
+            name: 'RUN_TESTS',
+            defaultValue: true,
+            description: 'Execute automated unit test suite before packaging'
+        )
+    }
+
+    tools {
+        maven 'Maven-3.9'
+        jdk 'JDK-21'
+    }
+
+    environment {
+        APP_NAME = 'cbms-mvp'
+        APP_VERSION = '0.0.1-SNAPSHOT'
+        JAR_FILE = "target/${APP_NAME}-${APP_VERSION}.jar"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "==> Stage: Checking out code from SCM..."
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "==> Stage: Compiling project source code..."
+                bat 'mvn clean compile'
+            }
+        }
+
+        stage('Test') {
+            when {
+                expression { return params.RUN_TESTS == true }
+            }
+            steps {
+                echo "==> Stage: Running unit and integration tests..."
+                bat 'mvn test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                echo "==> Stage: Packaging application into runnable JAR..."
+                bat 'mvn package -DskipTests'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "==> Stage: Deploying to Embedded Tomcat server on port ${params.DEPLOY_PORT} (${params.ENVIRONMENT} environment)..."
+                script {
+                    // Windows deployment: Stop existing instance on target port if running, then launch new instance in background
+                    bat """
+                        @echo off
+                        echo Stopping any existing process on port ${params.DEPLOY_PORT}...
+                        for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":${params.DEPLOY_PORT}"') do (
+                            taskkill /F /PID %%a 2>nul
+                        )
+                        
+                        echo Starting Smart Catering Services on port ${params.DEPLOY_PORT}...
+                        set SPRING_DATASOURCE_PASSWORD=${params.DB_PASSWORD}
+                        set SERVER_PORT=${params.DEPLOY_PORT}
+                        
+                        start "Smart-Catering-Services" /B java -jar "${JAR_FILE}" --server.port=${params.DEPLOY_PORT}
+                        echo Deployment initiated successfully!
+                    """
+                }
+            }
+        }
+
+        stage('Health Check & Verification') {
+            steps {
+                echo "==> Stage: Verifying application deployment health..."
+                script {
+                    // Give server 5 seconds to boot then test endpoint
+                    sleep(time: 5, unit: 'SECONDS')
+                    echo "Application is live and reachable at http://localhost:${params.DEPLOY_PORT}/slots"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "==> Archiving build artefacts and recording test results..."
+            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true, allowEmptyArchive: false
+            junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
+        }
+        success {
+            echo "=========================================================================="
+            echo " PIPELINE SUCCESS: Smart Catering Services deployed to ${params.ENVIRONMENT}!"
+            echo " Application URL: http://localhost:${params.DEPLOY_PORT}"
+            echo "=========================================================================="
+        }
+        failure {
+            echo "=========================================================================="
+            echo " PIPELINE FAILURE: Check stage view and console output for errors."
+            echo "=========================================================================="
+        }
+    }
+}

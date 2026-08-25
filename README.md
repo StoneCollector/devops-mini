@@ -1,64 +1,64 @@
-# Catering Booking and Management System (CBMS)
+# Smart Catering Services
 
-A Spring Boot 3.3 (Java 21) web application for automating catering slot booking, confirmation, cancellation, and status tracking. Built as the MVP for a 14-week DevOps course project, covering the full lifecycle from Git through Jenkins CI/CD, Selenium testing, Docker, and Ansible provisioning.
+A Spring Boot 3.3 (Java 21) web application for automating catering slot management, slot booking, vendor confirmation/rejection, customer cancellations, and system-wide administration. Built as a comprehensive DevOps project covering the full lifecycle from Git workflows through Jenkins CI/CD, Selenium testing, Docker containerization, and Ansible provisioning.
 
 ## Tech Stack
 
-- Java 21, Spring Boot 3.3
-- Maven (build tool)
-- Plain HTML/CSS (server-rendered templates, no frontend framework)
-- MySQL 8
-- Deployed via embedded Tomcat
+- **Backend**: Java 21, Spring Boot 3.3 (Spring MVC, Spring Data JPA)
+- **Build Tool**: Maven 3.8+
+- **Frontend / Templating**: Thymeleaf, semantic HTML5, custom vanilla CSS (responsive, clean design system with no external UI framework dependencies)
+- **Database**: MySQL 8 (database name: `cbms_db`)
+- **Server**: Embedded Apache Tomcat (port `8082`)
+
+## User Roles & Capabilities
+
+1. **Customer**:
+   - Register and login with email and password.
+   - Browse upcoming catering slots with date and menu/cuisine filtering.
+   - View slot vendor names and real-time available capacity.
+   - Book catering slots with customized guest counts.
+   - View "My Bookings" reservation history with live status (`PENDING`, `CONFIRMED`, `CANCELLED`).
+   - Cancel active bookings with a confirmation step, automatically releasing and restoring slot capacity.
+
+2. **Vendor**:
+   - Register and login as a catering Vendor.
+   - Create, publish, edit, and delete catering slots (`date`, `timeSlot`, `menuType`, `capacity`).
+   - View "My Slots" dashboard with live booked vs remaining capacity statistics.
+   - Slot deletion protection: Slots with active bookings cannot be deleted.
+   - View "Bookings on My Slots" dashboard showing customer reservations for their slots.
+   - Confirm (`CONFIRMED`) or reject (`CANCELLED`) pending customer bookings, with automatic capacity restoration on rejection.
+
+3. **Admin**:
+   - Oversight dashboard to monitor the entire system.
+   - User Management: View all registered users (Customers, Vendors, Admins) and activate or deactivate accounts.
+   - Bookings Directory: System-wide read-only view of all catering reservations.
 
 ## Prerequisites
 
-- Java 21
+- Java 21 JDK
 - Maven 3.8+
 - MySQL 8
 
 ## Setup Local Database
 
-If MySQL Server isn't installed yet (Windows, zip distribution):
-
-1. Extract the MySQL zip and add its `bin` folder to your system `PATH`.
-2. Create a `my.ini` config file in the MySQL install folder:
-   ```ini
-   [mysqld]
-   basedir=C:/mysql
-   datadir=C:/mysql/data
-   port=3306
-   ```
-3. Initialize the data directory (run as Administrator from the `bin` folder):
-   ```
-   mysqld --initialize --console
-   ```
-   Note the temporary root password printed in the console output.
-4. Install and start the service:
-   ```
-   mysqld --install MySQL80
-   net start MySQL80
-   ```
-5. Log in with the temporary password and set a real one:
-   ```
-   mysql -u root -p
-   ```
+1. Start your local MySQL 8 server on port `3306`.
+2. Create the database:
    ```sql
-   ALTER USER 'root'@'localhost' IDENTIFIED BY 'yourNewPassword';
+   CREATE DATABASE cbms_db;
    ```
-
-Then create the database for this application:
-```sql
-CREATE DATABASE cbms_db;
-```
-
-By default, the application expects to connect to `localhost:3306` with username `root` and the password set above — update `application.properties` or use the environment variables below rather than relying on an empty password.
-
-## Environment Variables
-
-You can override database settings using environment variables:
-- `SPRING_DATASOURCE_URL` (e.g., `jdbc:mysql://localhost:3306/cbms_db`)
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
+3. Set the MySQL database password via environment variable before running:
+   - **PowerShell**:
+     ```powershell
+     $env:SPRING_DATASOURCE_PASSWORD="your_mysql_password"
+     ```
+   - **Command Prompt**:
+     ```cmd
+     set SPRING_DATASOURCE_PASSWORD=your_mysql_password
+     ```
+   - **Bash / Linux / macOS**:
+     ```bash
+     export SPRING_DATASOURCE_PASSWORD=your_mysql_password
+     ```
 
 ## Running Locally
 
@@ -66,17 +66,24 @@ To run the application locally:
 ```bash
 mvn spring-boot:run
 ```
+Or execute `./run.bat` on Windows.
 
-Once running, the application will be available at `http://localhost:8080`.
+Once started, access the application in your browser at:
+`http://localhost:8082`
+
+### Seed Accounts (Out of the Box)
+- **Admin**: `admin@smartcatering.com` / `admin123`
+- **Vendor**: `chef.mario@smartcatering.com` / `vendor123`
+- **Customer**: `customer@example.com` / `customer123`
 
 ## Testing
 
-To run unit tests:
+To run the unit test suite:
 ```bash
 mvn test
 ```
 
-To run integration tests (if any are added):
+To run integration tests:
 ```bash
 mvn verify
 ```
@@ -89,7 +96,7 @@ This repository follows a consistent branching convention:
 |---|---|
 | `main` | Stable, deployable code only |
 | `develop` | Integration branch for merged features |
-| `feature/<short-description>` | New functionality, e.g. `feature/user-registration` |
+| `feature/<short-description>` | New functionality, e.g. `feature/vendor-role-and-rebrand` |
 | `bugfix/<short-description>` | Non-critical fixes, e.g. `bugfix/slot-capacity-count` |
 | `hotfix/<short-description>` | Urgent fixes applied directly against `main` |
 | `release/<version>` | Release staging, e.g. `release/1.0.0` |
