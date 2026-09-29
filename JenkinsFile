@@ -45,8 +45,15 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo "==> Stage: Compiling project source code..."
-                bat 'mvn clean compile'
+                echo "==> Stage: Stopping existing instances and compiling source code..."
+                bat """
+                    @echo off
+                    echo Stopping any process listening on port ${params.DEPLOY_PORT}...
+                    for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":${params.DEPLOY_PORT}"') do (
+                        taskkill /F /PID %%a 2>nul
+                    )
+                    mvn clean compile
+                """
             }
         }
 
@@ -74,10 +81,13 @@ pipeline {
                     withEnv(['JENKINS_NODE_COOKIE=dontKillMe', 'BUILD_ID=dontKillMe']) {
                         bat """
                             @echo off
-                            echo Stopping any existing process on port ${params.DEPLOY_PORT}...
+                            echo Ensuring port ${params.DEPLOY_PORT} is free...
                             for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":${params.DEPLOY_PORT}"') do (
                                 taskkill /F /PID %%a 2>nul
                             )
+                            
+                            if not exist "deploy" mkdir "deploy"
+                            copy /Y "${JAR_FILE}" "deploy\\app.jar"
                             
                             echo Starting Smart Catering Services on port ${params.DEPLOY_PORT}...
                             set SPRING_DATASOURCE_PASSWORD=${params.DB_PASSWORD}
@@ -85,7 +95,7 @@ pipeline {
                             set JENKINS_NODE_COOKIE=dontKillMe
                             set BUILD_ID=dontKillMe
                             
-                            start "Smart-Catering-Services" javaw -jar "${JAR_FILE}" --server.port=${params.DEPLOY_PORT}
+                            start "Smart-Catering-Services" javaw -jar "deploy\\app.jar" --server.port=${params.DEPLOY_PORT}
                             echo Deployment initiated successfully!
                         """
                     }

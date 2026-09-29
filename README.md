@@ -78,15 +78,62 @@ Once started, access the application in your browser at:
 
 ## Testing
 
-To run the unit test suite:
+### Unit Tests
+Unit tests run via Surefire and exclude integration tests:
 ```bash
 mvn test
 ```
 
-To run integration tests:
-```bash
-mvn verify
-```
+### Selenium WebDriver Integration Tests
+The integration test suite utilizes Selenium 4.x, WebDriverManager (automatic Chrome/ChromeDriver resolution), JUnit 5, AssertJ, and the Page Object Model (POM). Tests run via `maven-failsafe-plugin` during the `verify` phase.
+
+1. **Standard Execution (Headless Mode - Recommended for CI/CD):**
+   ```bash
+   mvn verify "-Dheadless=true"
+   ```
+
+2. **Graphical Browser Mode (Local Development):**
+   ```bash
+   mvn verify
+   ```
+
+3. **Running Against an Already Running Application:**
+   If the application is already running on a specific port (e.g., `8085` or `8082`):
+   ```bash
+   mvn verify "-Dapp.baseUrl=http://localhost:8085" "-Dheadless=true"
+   ```
+   *If `app.baseUrl` is not supplied, Spring Boot automatically boots an embedded Tomcat instance on a random available port.*
+
+4. **Running an Individual Integration Test Journey:**
+   ```bash
+   # Journey 1: Customer registration, login, profile validation, and logout
+   mvn verify "-Dit.test=AuthFlowIT" "-Dheadless=true"
+
+   # Journey 2: Invalid credentials, error alerts, and unauthenticated redirects
+   mvn verify "-Dit.test=InvalidLoginAndAccessIT" "-Dheadless=true"
+
+   # Journey 3: Customer books a slot, verifies PENDING status, and checks capacity decrease
+   mvn verify "-Dit.test=CustomerBookingIT" "-Dheadless=true"
+
+   # Journey 4: Vendor creates slot, verifies in vendor list, and confirms customer visibility
+   mvn verify "-Dit.test=VendorSlotCreationIT" "-Dheadless=true"
+
+   # Journey 5: Customer booking confirmation lifecycle by vendor
+   mvn verify "-Dit.test=VendorConfirmBookingIT" "-Dheadless=true"
+   ```
+
+5. **Screenshot on Failure Demo:**
+   A deliberate failing test tagged with `@Tag("demo")` is excluded from regular builds. To run it and demonstrate automatic failure screenshot capture:
+   ```bash
+   mvn verify "-Dgroups=demo" "-Dheadless=true"
+   ```
+   Failure screenshots are saved to:
+   `target/screenshots/{ClassName}_{methodName}_{yyyyMMdd_HHmmss}.png`
+
+6. **HTML Test Reports:**
+   After running `mvn verify`, the aggregated Failsafe HTML report is available at:
+   `target/site/failsafe-report.html`
+
 
 ## Branch Naming Rules
 
