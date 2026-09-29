@@ -2,64 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>CBMS - Available Slots</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <meta http-equiv="refresh" content="0; url=/slots">
+    <title>Smart Catering Services</title>
 </head>
 <body>
-    <header>
-        <div>
-            <h2>CBMS</h2>
-        </div>
-        <div>
-            <span th:if="${session.userId != null}">
-                Welcome, <span th:text="${session.userName}">User</span>!
-                <a th:href="@{/my-bookings}">My Bookings</a>
-                <a th:if="${session.userRole == 'ADMIN'}" th:href="@{/admin}">Admin</a>
-                <a th:href="@{/logout}">Logout</a>
-            </span>
-            <span th:if="${session.userId == null}">
-                <a th:href="@{/login}">Login</a>
-                <a th:href="@{/register}">Register</a>
-            </span>
-        </div>
-    </header>
-
-    <div class="container">
-        <h1>Available Catering Slots</h1>
-        
-        <p class="error" th:if="${error}" th:text="${error}"></p>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Time Slot</th>
-                    <th>Menu Type</th>
-                    <th>Capacity Left</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="slot : ${slots}">
-                    <td th:text="${slot.date}"></td>
-                    <td th:text="${slot.timeSlot}"></td>
-                    <td th:text="${slot.menuType}"></td>
-                    <td th:text="${slot.availableCapacity}"></td>
-                    <td>
-                        <form th:if="${session.userId != null and slot.availableCapacity > 0}" th:action="@{/book}" method="post">
-                            <input type="hidden" name="slotId" th:value="${slot.id}">
-                            <input type="number" name="guests" min="1" th:max="${slot.availableCapacity}" value="1" required style="width: 60px;">
-                            <button type="submit">Book</button>
-                        </form>
-                        <span th:if="${session.userId == null}">Login to book</span>
-                        <span th:if="${slot.availableCapacity == 0}">Full</span>
-                    </td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(slots)}">
-                    <td colspan="5">No upcoming slots available.</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <p>Redirecting to <a th:href="@{/slots}">Smart Catering Services</a>...</p>
 </body>
 </html>

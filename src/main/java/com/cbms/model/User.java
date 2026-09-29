@@ -26,7 +26,11 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 30)
     private Role role = Role.CUSTOMER;
+
+    @Column(nullable = false)
+    private boolean active = true;
 
     public User() {}
 
@@ -35,6 +39,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = Role.CUSTOMER;
+        this.active = true;
     }
 
     public User(String name, String email, String password, Role role) {
@@ -42,6 +47,15 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = (role != null) ? role : Role.CUSTOMER;
+        this.active = true;
+    }
+
+    public User(String name, String email, String password, Role role, boolean active) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = (role != null) ? role : Role.CUSTOMER;
+        this.active = active;
     }
 
     public Long getId() { return id; }
@@ -58,4 +72,7 @@ public class User {
     
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

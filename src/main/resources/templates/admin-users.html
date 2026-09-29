@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Smart Catering Services Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>User Management &amp; Oversight</h1>
+                <p class="page-subtitle">System-wide user directory with account status controls</p>
+            </div>
+            <div>
+                <a th:href="@{/admin/bookings}" class="btn btn-secondary">View All Bookings</a>
+            </div>
+        </div>
+
+        <!-- Feedback Alerts -->
+        <div class="alert alert-success" th:if="${param.updated}">User account status updated successfully.</div>
+        <div class="alert alert-error" th:if="${param.error}" th:text="${param.error}"></div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Account Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="user : ${users}">
+                        <td th:text="${user.id}"></td>
+                        <td style="font-weight: 600;" th:text="${user.name}"></td>
+                        <td th:text="${user.email}"></td>
+                        <td>
+                            <span class="role-badge"
+                                  th:classappend="${user.role.name() == 'ADMIN' ? 'badge-admin' : (user.role.name() == 'VENDOR' ? 'badge-vendor' : 'badge-customer')}"
+                                  th:text="${user.role}">
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${user.active ? 'status-active' : 'status-deactivated'}"
+                                  th:text="${user.active ? 'ACTIVE' : 'DEACTIVATED'}">
+                            </span>
+                        </td>
+                        <td>
+                            <div th:if="${user.id != session.userId}">
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" method="post">
+                                    <button th:if="${user.active}" type="submit" 
+                                            class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Are you sure you want to deactivate this user account?');">
+                                        Deactivate
+                                    </button>
+                                    <button th:unless="${user.active}" type="submit" 
+                                            class="btn btn-success btn-sm">
+                                        Activate
+                                    </button>
+                                </form>
+                            </div>
+                            <span th:if="${user.id == session.userId}" style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">
+                                Current Admin (You)
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="6" class="empty-row">No users registered in the system.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Bookings on My Slots - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>Bookings on My Slots</h1>
+                <p class="page-subtitle">Review customer reservations, confirm pending requests, and manage capacity</p>
+            </div>
+            <div>
+                <a th:href="@{/vendor/slots}" class="btn btn-secondary">Manage My Slots</a>
+            </div>
+        </div>
+
+        <!-- Feedback Alerts -->
+        <div class="alert alert-success" id="bookingConfirmedAlert" th:if="${param.confirmed}">Customer booking has been confirmed!</div>
+        <div class="alert alert-info" id="bookingRejectedAlert" th:if="${param.rejected}">Booking rejected and slot capacity has been restored.</div>
+        <div class="alert alert-error" id="bookingErrorAlert" th:if="${param.error}" th:text="${param.error}"></div>
+
+        <div class="table-wrapper">
+            <table class="data-table" id="vendorBookingsTable">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Service Date</th>
+                        <th>Time Slot</th>
+                        <th>Menu / Cuisine</th>
+                        <th>Guests</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="booking : ${bookings}" th:id="'vendor-booking-row-' + ${booking.id}">
+                        <td>
+                            <strong th:id="'vendor-booking-name-' + ${booking.id}" th:text="${booking.user.name}"></strong>
+                            <div style="font-size: 0.825rem; color: var(--text-muted);" th:id="'vendor-booking-email-' + ${booking.id}" th:text="${booking.user.email}"></div>
+                        </td>
+                        <td style="font-weight: 600;" th:id="'vendor-booking-date-' + ${booking.id}" th:text="${booking.slot.date}"></td>
+                        <td th:id="'vendor-booking-time-' + ${booking.id}" th:text="${booking.slot.timeSlot}"></td>
+                        <td th:id="'vendor-booking-menu-' + ${booking.id}" th:text="${booking.slot.menuType}"></td>
+                        <td th:id="'vendor-booking-guests-' + ${booking.id}" th:text="${booking.numberOfGuests}"></td>
+                        <td>
+                            <span class="status-badge"
+                                  th:id="'vendor-booking-status-' + ${booking.id}"
+                                  th:classappend="${booking.status.name() == 'CONFIRMED' ? 'status-confirmed' : (booking.status.name() == 'CANCELLED' ? 'status-cancelled' : 'status-pending')}"
+                                  th:text="${booking.status}">
+                            </span>
+                        </td>
+                        <td>
+                            <div th:if="${booking.status.name() == 'PENDING'}" class="actions-group">
+                                <form th:action="@{/vendor/bookings/{id}/confirm(id=${booking.id})}" method="post">
+                                    <button type="submit" th:id="'confirm-btn-' + ${booking.id}" class="btn btn-success btn-sm confirm-btn">Confirm</button>
+                                </form>
+                                <form th:action="@{/vendor/bookings/{id}/reject(id=${booking.id})}" method="post"
+                                      onsubmit="return confirm('Are you sure you want to reject this booking? This will restore capacity.');">
+                                    <button type="submit" th:id="'reject-btn-' + ${booking.id}" class="btn btn-danger btn-sm reject-btn">Reject</button>
+                                </form>
+                            </div>
+                            <span th:if="${booking.status.name() == 'CONFIRMED'}" th:id="'approved-text-' + ${booking.id}" style="color: #166534; font-weight: 600; font-size: 0.85rem;">
+                                Approved
+                            </span>
+                            <span th:if="${booking.status.name() == 'CANCELLED'}" th:id="'cancelled-text-' + ${booking.id}" style="color: var(--text-muted); font-size: 0.85rem;">
+                                Cancelled
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(bookings)}">
+                        <td colspan="7" class="empty-row" id="noVendorBookingsRow">No customer bookings have been made on your slots yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>

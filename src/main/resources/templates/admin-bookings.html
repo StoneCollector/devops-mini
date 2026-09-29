@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Bookings - Smart Catering Services Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>System Bookings Directory</h1>
+                <p class="page-subtitle">Read-only oversight of all catering reservations across the platform</p>
+            </div>
+            <div>
+                <a th:href="@{/admin/users}" class="btn btn-primary">Manage Users</a>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Vendor</th>
+                        <th>Service Date</th>
+                        <th>Time Slot</th>
+                        <th>Menu / Cuisine</th>
+                        <th>Guests</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="booking : ${bookings}">
+                        <td th:text="'#' + ${booking.id}"></td>
+                        <td>
+                            <strong th:text="${booking.user.name}"></strong>
+                            <div style="font-size: 0.825rem; color: var(--text-muted);" th:text="${booking.user.email}"></div>
+                        </td>
+                        <td>
+                            <span th:if="${booking.slot.vendor != null}" th:text="${booking.slot.vendor.name}" style="font-weight: 500;"></span>
+                            <span th:if="${booking.slot.vendor == null}" style="color: var(--text-muted);">Smart Catering Chef</span>
+                        </td>
+                        <td style="font-weight: 600;" th:text="${booking.slot.date}"></td>
+                        <td th:text="${booking.slot.timeSlot}"></td>
+                        <td th:text="${booking.slot.menuType}"></td>
+                        <td th:text="${booking.numberOfGuests}"></td>
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${booking.status.name() == 'CONFIRMED' ? 'status-confirmed' : (booking.status.name() == 'CANCELLED' ? 'status-cancelled' : 'status-pending')}"
+                                  th:text="${booking.status}">
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(bookings)}">
+                        <td colspan="8" class="empty-row">No bookings recorded in the system.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>
