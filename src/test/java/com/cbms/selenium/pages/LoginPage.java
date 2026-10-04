@@ -1,7 +1,9 @@
 package com.cbms.selenium.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
@@ -24,27 +26,46 @@ public class LoginPage extends BasePage {
 
     public LoginPage open(String baseUrl) {
         driver.get(baseUrl + "/login");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(emailInput));
+        wait.until(ExpectedConditions.urlContains("/login"));
+        wait.until(d -> "complete".equals(((JavascriptExecutor) d).executeScript("return document.readyState")));
+        wait.until(ExpectedConditions.elementToBeClickable(emailInput));
         return this;
     }
 
     public LoginPage enterEmail(String email) {
-        WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(emailInput));
-        input.clear();
-        input.sendKeys(email);
+        try {
+            WebElement input = wait.until(ExpectedConditions.elementToBeClickable(emailInput));
+            input.clear();
+            input.sendKeys(email);
+        } catch (WebDriverException e) {
+            WebElement input = wait.until(ExpectedConditions.elementToBeClickable(emailInput));
+            input.clear();
+            input.sendKeys(email);
+        }
         return this;
     }
 
     public LoginPage enterPassword(String password) {
-        WebElement input = wait.until(ExpectedConditions.visibilityOfElementLocated(passwordInput));
-        input.clear();
-        input.sendKeys(password);
+        try {
+            WebElement input = wait.until(ExpectedConditions.elementToBeClickable(passwordInput));
+            input.clear();
+            input.sendKeys(password);
+        } catch (WebDriverException e) {
+            WebElement input = wait.until(ExpectedConditions.elementToBeClickable(passwordInput));
+            input.clear();
+            input.sendKeys(password);
+        }
         return this;
     }
 
     public void clickSignIn() {
-        WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(submitButton));
-        btn.click();
+        try {
+            WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(submitButton));
+            btn.click();
+        } catch (WebDriverException e) {
+            WebElement btn = wait.until(ExpectedConditions.elementToBeClickable(submitButton));
+            btn.click();
+        }
     }
 
     public SlotsPage loginAsCustomer(String email, String password) {
