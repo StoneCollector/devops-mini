@@ -116,7 +116,7 @@ public class AuthController {
 
     @RequestMapping(value = "/logout", method = {RequestMethod.GET, RequestMethod.POST})
     public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/login?logout=true";
+        // DELIBERATE DEFECT (Week 10 demo)
+        return "redirect:/slots";
     }
 }
