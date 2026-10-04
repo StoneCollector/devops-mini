@@ -1,6 +1,7 @@
 package com.cbms.selenium.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -44,6 +45,8 @@ public abstract class BasePage {
     public LoginPage logout() {
         WebElement logoutBtn = wait.until(ExpectedConditions.elementToBeClickable(By.id("logoutBtn")));
         logoutBtn.click();
+        wait.until(ExpectedConditions.urlContains("/login"));
+        wait.until(d -> "complete".equals(((JavascriptExecutor) d).executeScript("return document.readyState")));
         return new LoginPage(driver);
     }
 }

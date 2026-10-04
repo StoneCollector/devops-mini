@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK-21'
         maven 'Maven 3.9.16'
+        jdk 'JDK-21'
     }
 
     options {
@@ -67,6 +67,7 @@ pipeline {
 
     post {
         always {
+            bat(returnStatus: true, script: 'mvn surefire-report:failsafe-report-only')
             publishHTML(target: [
                 reportDir: 'target/site',
                 reportFiles: 'failsafe-report.html',
