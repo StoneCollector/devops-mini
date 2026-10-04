@@ -87,6 +87,8 @@ public class SlotsPage extends BasePage {
         WebElement form = bookBtn.findElement(By.xpath("./ancestor::form"));
         ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].submit();", form);
         wait.until(ExpectedConditions.urlContains("/bookings/me"));
+        wait.until(d -> "complete".equals(((org.openqa.selenium.JavascriptExecutor) d).executeScript("return document.readyState")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("myBookingsTable")));
         return new BookingsPage(driver);
     }
 
@@ -105,6 +107,8 @@ public class SlotsPage extends BasePage {
                 WebElement form = row.findElement(By.tagName("form"));
                 ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].submit();", form);
                 wait.until(ExpectedConditions.urlContains("/bookings/me"));
+                wait.until(d -> "complete".equals(((org.openqa.selenium.JavascriptExecutor) d).executeScript("return document.readyState")));
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("myBookingsTable")));
                 return new BookingsPage(driver);
             }
         }
@@ -127,6 +131,8 @@ public class SlotsPage extends BasePage {
                 input, String.valueOf(guests));
         ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].submit();", form);
         wait.until(ExpectedConditions.urlContains("/bookings/me"));
+        wait.until(d -> "complete".equals(((org.openqa.selenium.JavascriptExecutor) d).executeScript("return document.readyState")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("myBookingsTable")));
         return new BookingsPage(driver);
     }
 

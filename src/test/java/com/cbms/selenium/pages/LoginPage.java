@@ -73,6 +73,7 @@ public class LoginPage extends BasePage {
         enterPassword(password);
         clickSignIn();
         wait.until(ExpectedConditions.urlContains("/slots"));
+        wait.until(d -> "complete".equals(((JavascriptExecutor) d).executeScript("return document.readyState")));
         return new SlotsPage(driver);
     }
 
@@ -81,6 +82,7 @@ public class LoginPage extends BasePage {
         enterPassword(password);
         clickSignIn();
         wait.until(ExpectedConditions.urlContains("/vendor/slots"));
+        wait.until(d -> "complete".equals(((JavascriptExecutor) d).executeScript("return document.readyState")));
         return new VendorSlotsPage(driver);
     }
 

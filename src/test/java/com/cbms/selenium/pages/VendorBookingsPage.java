@@ -66,6 +66,7 @@ public class VendorBookingsPage extends BasePage {
         WebElement form = confirmButtons.get(0).findElement(By.xpath("./ancestor::form"));
         ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].submit();", form);
         wait.until(ExpectedConditions.visibilityOfElementLocated(confirmedAlert));
+        wait.until(d -> "complete".equals(((org.openqa.selenium.JavascriptExecutor) d).executeScript("return document.readyState")));
         return this;
     }
 
@@ -78,6 +79,7 @@ public class VendorBookingsPage extends BasePage {
                 WebElement form = confirmBtn.findElement(By.xpath("./ancestor::form"));
                 ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].submit();", form);
                 wait.until(ExpectedConditions.visibilityOfElementLocated(confirmedAlert));
+                wait.until(d -> "complete".equals(((org.openqa.selenium.JavascriptExecutor) d).executeScript("return document.readyState")));
                 return this;
             }
         }

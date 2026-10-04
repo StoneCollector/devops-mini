@@ -22,9 +22,10 @@ public class AuthFlowIT extends BaseIT {
         RegisterPage registerPage = new RegisterPage(driver).open(baseUrl);
         LoginPage loginPageAfterReg = registerPage.registerUser(customerName, customerEmail, customerPassword, "CUSTOMER");
 
-        // Assert 1: Redirected to login with registration feedback
+        // Assert 1: Redirected to login with registration feedback (include error message if registration failed)
+        String regError = registerPage.getRegistrationError();
         assertThat(loginPageAfterReg.getCurrentUrl())
-                .as("Registration should redirect to login page")
+                .as("Registration should redirect to login page" + (regError != null ? " (Registration failed with error: " + regError + ")" : ""))
                 .contains("/login");
         assertThat(loginPageAfterReg.isSuccessMessageDisplayed())
                 .as("Registration success message should be displayed")

@@ -65,6 +65,9 @@ public class VendorSlotFormPage extends BasePage {
         WebElement btn = wait.until(ExpectedConditions.presenceOfElementLocated(submitButton));
         WebElement form = btn.findElement(By.xpath("./ancestor::form"));
         ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].submit();", form);
+        wait.until(ExpectedConditions.urlContains("/vendor/slots"));
+        wait.until(d -> "complete".equals(((org.openqa.selenium.JavascriptExecutor) d).executeScript("return document.readyState")));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("vendorSlotsTable")));
         return new VendorSlotsPage(driver);
     }
 
