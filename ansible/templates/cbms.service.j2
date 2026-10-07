@@ -1,0 +1,20 @@
+[Unit]
+Description=Smart Catering Services (CBMS) Container Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+ExecStartPre=-/usr/bin/docker stop cbms-app
+ExecStartPre=-/usr/bin/docker rm cbms-app
+ExecStart=/usr/bin/docker run --rm --name cbms-app \
+  --network cbms-net \
+  --env-file /etc/cbms/app.env \
+  -p {{ app_port }}:{{ app_port }} \
+  {{ app_image }}:{{ app_image_tag }}
+ExecStop=/usr/bin/docker stop -t 10 cbms-app
+
+[Install]
+WantedBy=multi-user.target
