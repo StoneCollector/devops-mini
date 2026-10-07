@@ -15,6 +15,7 @@ pipeline {
 
     environment {
         SPRING_DATASOURCE_PASSWORD = credentials('cbms-db-password')
+        DOCKER_DB_PASSWORD = credentials('cbms-docker-db-password')
         IMAGE_TAG = "1.2.${BUILD_NUMBER}"
     }
 
@@ -92,7 +93,7 @@ pipeline {
                         echo %IMAGE_TAG%> current-tag.txt
                     '''
                     bat(returnStatus: true, script: 'docker rm -f cbms-app')
-                    bat "docker run -d --name cbms-app --network cbms-net -p 8082:8082 -e SPRING_DATASOURCE_URL=\"jdbc:mysql://cbms-db:3306/cbms_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false\" -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=%SPRING_DATASOURCE_PASSWORD% %DOCKER_USER%/cbms:%IMAGE_TAG%"
+                    bat "docker run -d --name cbms-app --network cbms-net -p 8082:8082 -e SPRING_DATASOURCE_URL=\"jdbc:mysql://cbms-db:3306/cbms_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false\" -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=%DOCKER_DB_PASSWORD% %DOCKER_USER%/cbms:%IMAGE_TAG%"
                 }
             }
         }
