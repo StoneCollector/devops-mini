@@ -103,25 +103,23 @@ pipeline {
             }
             steps {
                 echo '==> Stage: Verifying container health via HTTP smoke test...'
-                bat '''
-                    @echo off
-                    set count=0
-                    :retry
-                    timeout /t 5 /nobreak >nul
-                    curl -f -s -o nul http://localhost:8082
-                    if %ERRORLEVEL% EQU 0 (
-                        echo ==> Smoke test PASSED: Application is responding at http://localhost:8082
-                        exit /b 0
-                    )
-                    set /a count+=1
-                    if %count% LSS 8 (
-                        echo Still waiting for container to start... (attempt %count%/8)
-                        goto retry
-                    )
-                    echo ==> Smoke test FAILED: Container failed to respond after 40 seconds.
-                    docker logs cbms-app
-                    exit /b 1
-                '''
+                script {
+                    def healthy = false
+                    for (int i = 1; i <= 8; i++) {
+                        sleep(time: 5, unit: 'SECONDS')
+                        def status = bat(returnStatus: true, script: '@echo off & curl -f -s -o nul http://localhost:8082')
+                        if (status == 0) {
+                            echo "==> Smoke test PASSED: Application is responding at http://localhost:8082"
+                            healthy = true
+                            break
+                        }
+                        echo "Still waiting for container to start... (attempt ${i}/8)"
+                    }
+                    if (!healthy) {
+                        bat 'docker logs cbms-app'
+                        error("Smoke test FAILED: Container failed to respond after 40 seconds.")
+                    }
+                }
             }
         }
     }
