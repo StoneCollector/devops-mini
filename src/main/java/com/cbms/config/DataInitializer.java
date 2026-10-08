@@ -78,20 +78,29 @@ public class DataInitializer implements CommandLineRunner {
 
         // 5. Ensure existing slots without vendor are assigned to the seeded vendor
         List<CateringSlot> existingSlots = cateringSlotRepository.findAll();
-        if (existingSlots.isEmpty()) {
-            LocalDate today = LocalDate.now();
+        for (CateringSlot slot : existingSlots) {
+            if (slot.getVendor() == null) {
+                slot.setVendor(vendor);
+                cateringSlotRepository.save(slot);
+            }
+        }
+
+        // 6. Ensure at least one upcoming seeded slot with available capacity exists
+        LocalDate today = LocalDate.now();
+        CateringSlot seededSlot = existingSlots.stream()
+                .filter(s -> !s.getDate().isBefore(today) && "Standard Buffet".equals(s.getMenuType()))
+                .findFirst()
+                .orElse(null);
+
+        if (seededSlot == null) {
             cateringSlotRepository.save(new CateringSlot(today, "Lunch (12:00 PM - 2:00 PM)", "Standard Buffet", 30, vendor));
             cateringSlotRepository.save(new CateringSlot(today, "Dinner (7:00 PM - 9:00 PM)", "Executive Dining", 20, vendor));
             cateringSlotRepository.save(new CateringSlot(today.plusDays(1), "Lunch (12:00 PM - 2:00 PM)", "Gourmet Vegetarian", 25, vendor));
             cateringSlotRepository.save(new CateringSlot(today.plusDays(1), "Dinner (7:00 PM - 9:00 PM)", "Seafood Special", 15, vendor));
             cateringSlotRepository.save(new CateringSlot(today.plusDays(2), "Lunch (12:00 PM - 2:00 PM)", "Continental Spread", 40, vendor));
-        } else {
-            for (CateringSlot slot : existingSlots) {
-                if (slot.getVendor() == null) {
-                    slot.setVendor(vendor);
-                    cateringSlotRepository.save(slot);
-                }
-            }
+        } else if (seededSlot.getAvailableCapacity() < 5) {
+            seededSlot.setCapacity(seededSlot.getSlotsBooked() + 30);
+            cateringSlotRepository.save(seededSlot);
         }
     }
 }

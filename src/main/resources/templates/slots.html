@@ -16,12 +16,12 @@
                 <p class="page-subtitle">Discover culinary experiences and book available catering slots</p>
             </div>
             <div th:if="${session.userRole == 'VENDOR'}">
-                <a th:href="@{/vendor/slots/new}" class="btn btn-primary">+ Create New Slot</a>
+                <a th:href="@{/vendor/slots/new}" id="vendorCreateSlotBtn" class="btn btn-primary">+ Create New Slot</a>
             </div>
         </div>
 
         <!-- Feedback Alert -->
-        <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+        <div class="alert alert-error" id="errorMessage" th:if="${error}" th:text="${error}"></div>
 
         <!-- Filter Card -->
         <div class="filter-card">
@@ -38,16 +38,16 @@
                 </div>
 
                 <div class="filter-actions">
-                    <button type="submit" class="btn btn-secondary">Apply Filters</button>
+                    <button type="submit" id="applyFiltersBtn" class="btn btn-secondary">Apply Filters</button>
                     <a th:if="${selectedDate != null or (selectedMenuType != null and !selectedMenuType.isEmpty())}" 
-                       th:href="@{/slots}" class="btn btn-outline">Clear</a>
+                       th:href="@{/slots}" id="clearFiltersBtn" class="btn btn-outline">Clear</a>
                 </div>
             </form>
         </div>
 
         <!-- Slots Table -->
         <div class="table-wrapper">
-            <table class="data-table">
+            <table class="data-table" id="slotsTable">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -59,19 +59,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="slot : ${slots}">
-                        <td style="font-weight: 600;" th:text="${slot.date}"></td>
-                        <td th:text="${slot.timeSlot}"></td>
-                        <td th:text="${slot.menuType}"></td>
-                        <td>
+                    <tr th:each="slot : ${slots}" th:id="'slot-row-' + ${slot.id}">
+                        <td style="font-weight: 600;" th:id="'slot-date-' + ${slot.id}" th:text="${slot.date}"></td>
+                        <td th:id="'slot-time-' + ${slot.id}" th:text="${slot.timeSlot}"></td>
+                        <td th:id="'slot-menu-' + ${slot.id}" th:text="${slot.menuType}"></td>
+                        <td th:id="'slot-vendor-' + ${slot.id}">
                             <span th:if="${slot.vendor != null}" th:text="${slot.vendor.name}" style="font-weight: 500;"></span>
                             <span th:if="${slot.vendor == null}" class="text-muted">Smart Catering Chef</span>
                         </td>
                         <td>
-                            <span th:if="${slot.availableCapacity > 0}" class="capacity-indicator capacity-available">
-                                <span th:text="${slot.availableCapacity}"></span> / <span th:text="${slot.capacity}"></span> available
+                            <span th:if="${slot.availableCapacity > 0}" class="capacity-indicator capacity-available" th:id="'slot-capacity-' + ${slot.id}">
+                                <span class="avail-val" th:text="${slot.availableCapacity}"></span> / <span th:text="${slot.capacity}"></span> available
                             </span>
-                            <span th:if="${slot.availableCapacity == 0}" class="status-badge status-cancelled">
+                            <span th:if="${slot.availableCapacity == 0}" class="status-badge status-cancelled" th:id="'slot-capacity-full-' + ${slot.id}">
                                 Fully Booked
                             </span>
                         </td>
@@ -81,8 +81,8 @@
                                 <form th:if="${slot.availableCapacity > 0}" th:action="@{/bookings}" method="post" class="actions-group">
                                     <input type="hidden" name="slotId" th:value="${slot.id}">
                                     <input type="number" name="numberOfGuests" min="1" th:max="${slot.availableCapacity}" value="1" 
-                                           class="form-control" style="width: 70px; padding: 0.35rem 0.5rem;" title="Number of guests" required>
-                                    <button type="submit" class="btn btn-primary btn-sm">Book</button>
+                                           class="form-control guests-input" th:id="'guests-input-' + ${slot.id}" style="width: 70px; padding: 0.35rem 0.5rem;" title="Number of guests" required>
+                                    <button type="submit" class="btn btn-primary btn-sm book-btn" th:id="'book-btn-' + ${slot.id}">Book</button>
                                 </form>
                                 <span th:if="${slot.availableCapacity == 0}" style="color: var(--text-muted); font-size: 0.85rem;">No seats left</span>
                             </div>
@@ -90,7 +90,7 @@
                             <!-- Vendor Logged-in -->
                             <div th:if="${session.userRole == 'VENDOR'}">
                                 <span th:if="${slot.vendor != null and slot.vendor.id == session.userId}">
-                                    <a th:href="@{/vendor/slots/{id}/edit(id=${slot.id})}" class="btn btn-outline btn-sm">Edit My Slot</a>
+                                    <a th:href="@{/vendor/slots/{id}/edit(id=${slot.id})}" th:id="'edit-slot-btn-' + ${slot.id}" class="btn btn-outline btn-sm">Edit My Slot</a>
                                 </span>
                                 <span th:if="${slot.vendor == null or slot.vendor.id != session.userId}" style="color: var(--text-muted); font-size: 0.85rem;">
                                     Vendor slot
@@ -104,12 +104,12 @@
 
                             <!-- Logged-out User -->
                             <div th:if="${session.userId == null}">
-                                <a th:href="@{/login}" class="btn btn-outline btn-sm">Login to Book</a>
+                                <a th:href="@{/login}" id="loginToBookBtn" class="btn btn-outline btn-sm">Login to Book</a>
                             </div>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(slots)}">
-                        <td colspan="6" class="empty-row">No catering slots found matching your criteria. Check back soon or try different filters!</td>
+                        <td colspan="6" class="empty-row" id="noSlotsRow">No catering slots found matching your criteria. Check back soon or try different filters!</td>
                     </tr>
                 </tbody>
             </table>

@@ -1,105 +1,125 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(
-            name: 'ENVIRONMENT',
-            choices: ['dev', 'staging', 'production'],
-            description: 'Target Deployment Environment'
-        )
-        string(
-            name: 'DEPLOY_PORT',
-            defaultValue: '4747',
-            description: 'Server HTTP Port to deploy the application on'
-        )
-        password(
-            name: 'DB_PASSWORD',
-            defaultValue: 'DOPSnet',
-            description: 'MySQL Database Password'
-        )
-        booleanParam(
-            name: 'RUN_TESTS',
-            defaultValue: true,
-            description: 'Execute automated unit test suite before packaging'
-        )
-    }
-
     tools {
         maven 'Maven 3.9.16'
         jdk 'JDK-21'
     }
 
+    options {
+        timestamps()
+        timeout(time: 20, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
     environment {
-        APP_NAME = 'cbms-mvp'
-        APP_VERSION = '0.0.1-SNAPSHOT'
-        JAR_FILE = "target/${APP_NAME}-${APP_VERSION}.jar"
+        SPRING_DATASOURCE_PASSWORD = credentials('cbms-db-password')
+        DOCKER_DB_PASSWORD = credentials('cbms-docker-db-password')
+        IMAGE_TAG = "1.2.${BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo "==> Stage: Checking out code from SCM..."
+                echo '==> Stage: Checking out code from SCM...'
                 checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Build and Unit Tests') {
             steps {
-                echo "==> Stage: Compiling project source code..."
-                bat 'mvn clean compile'
+                echo '==> Stage: Compiling source code and executing unit test suite...'
+                bat 'mvn clean test'
             }
-        }
-
-        stage('Test') {
-            when {
-                expression { return params.RUN_TESTS == true }
-            }
-            steps {
-                echo "==> Stage: Running unit and integration tests..."
-                bat 'mvn test'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                echo "==> Stage: Packaging application into runnable JAR..."
-                bat 'mvn package -DskipTests'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo "==> Stage: Deploying to Embedded Tomcat server on port ${params.DEPLOY_PORT} (${params.ENVIRONMENT} environment)..."
-                script {
-                    withEnv(['JENKINS_NODE_COOKIE=dontKillMe', 'BUILD_ID=dontKillMe']) {
-                        bat """
-                            @echo off
-                            echo Stopping any existing process on port ${params.DEPLOY_PORT}...
-                            for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":${params.DEPLOY_PORT}"') do (
-                                taskkill /F /PID %%a 2>nul
-                            )
-                            
-                            echo Starting Smart Catering Services on port ${params.DEPLOY_PORT}...
-                            set SPRING_DATASOURCE_PASSWORD=${params.DB_PASSWORD}
-                            set SERVER_PORT=${params.DEPLOY_PORT}
-                            set JENKINS_NODE_COOKIE=dontKillMe
-                            set BUILD_ID=dontKillMe
-                            
-                            start "Smart-Catering-Services" javaw -jar "${JAR_FILE}" --server.port=${params.DEPLOY_PORT}
-                            echo Deployment initiated successfully!
-                        """
-                    }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
 
-        stage('Health Check & Verification') {
+        stage('Selenium Integration Tests') {
             steps {
-                echo "==> Stage: Verifying application deployment health..."
+                echo '==> Stage: Executing Selenium WebDriver integration tests in headless mode...'
+                bat 'mvn verify -Dheadless=true'
+            }
+            post {
+                always {
+                    junit 'target/failsafe-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                echo "==> Stage: Building Docker image (${IMAGE_TAG} and latest)..."
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat 'docker build -t %DOCKER_USER%/cbms:%IMAGE_TAG% -t %DOCKER_USER%/cbms:latest .'
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                echo "==> Stage: Authenticating and pushing images to Docker Hub..."
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat '@echo off & echo %DOCKER_PASS%| docker login -u %DOCKER_USER% --password-stdin'
+                    bat 'docker push %DOCKER_USER%/cbms:%IMAGE_TAG%'
+                    bat 'docker push %DOCKER_USER%/cbms:latest'
+                    bat 'docker logout'
+                }
+            }
+        }
+
+        stage('Deploy Container') {
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                echo "==> Stage: Deploying cbms-app container with tag ${IMAGE_TAG}..."
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat '''
+                        @echo off
+                        if exist "current-tag.txt" (
+                            copy /Y current-tag.txt previous-tag.txt
+                        )
+                        echo %IMAGE_TAG%> current-tag.txt
+                    '''
+                    bat(returnStatus: true, script: 'docker rm -f cbms-app')
+                    bat "docker run -d --name cbms-app --network cbms-net -p 8082:8082 -e SPRING_DATASOURCE_URL=\"jdbc:mysql://cbms-db:3306/cbms_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false\" -e SPRING_DATASOURCE_USERNAME=root -e SPRING_DATASOURCE_PASSWORD=%DOCKER_DB_PASSWORD% %DOCKER_USER%/cbms:%IMAGE_TAG%"
+                }
+            }
+        }
+
+        stage('Smoke Test') {
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                echo '==> Stage: Verifying container health via HTTP smoke test...'
                 script {
-                    // Give server 6 seconds to boot then verify
-                    sleep(time: 6, unit: 'SECONDS')
-                    echo "Application is live and reachable at http://localhost:${params.DEPLOY_PORT}/slots"
+                    def healthy = false
+                    for (int i = 1; i <= 8; i++) {
+                        sleep(time: 5, unit: 'SECONDS')
+                        def status = bat(returnStatus: true, script: '@echo off & curl -f -s -o nul http://localhost:8082')
+                        if (status == 0) {
+                            echo "==> Smoke test PASSED: Application is responding at http://localhost:8082"
+                            healthy = true
+                            break
+                        }
+                        echo "Still waiting for container to start... (attempt ${i}/8)"
+                    }
+                    if (!healthy) {
+                        bat 'docker logs cbms-app'
+                        error("Smoke test FAILED: Container failed to respond after 40 seconds.")
+                    }
                 }
             }
         }
@@ -107,20 +127,21 @@ pipeline {
 
     post {
         always {
-            echo "==> Archiving build artefacts and recording test results..."
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true, allowEmptyArchive: false
-            junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
-        }
-        success {
-            echo "=========================================================================="
-            echo " PIPELINE SUCCESS: Smart Catering Services deployed to ${params.ENVIRONMENT}!"
-            echo " Application URL: http://localhost:${params.DEPLOY_PORT}/slots"
-            echo "=========================================================================="
+            bat(returnStatus: true, script: 'mvn surefire-report:failsafe-report-only')
+            publishHTML(target: [
+                reportDir: 'target/site',
+                reportFiles: 'failsafe-report.html',
+                reportName: 'Selenium Failsafe Report',
+                keepAll: true,
+                allowMissing: true,
+                alwaysLinkToLastBuild: true
+            ])
+            archiveArtifacts artifacts: 'target/screenshots/*.png, current-tag.txt, previous-tag.txt', allowEmptyArchive: true
         }
         failure {
-            echo "=========================================================================="
-            echo " PIPELINE FAILURE: Check stage view and console output for errors."
-            echo "=========================================================================="
+            echo '=========================================================================='
+            echo ' PIPELINE FAILURE: Deployment was skipped because one or more tests failed.'
+            echo '=========================================================================='
         }
     }
 }

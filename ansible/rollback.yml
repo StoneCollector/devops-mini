@@ -1,0 +1,50 @@
+- name: Rollback CBMS Application to Previous Stable Release
+  hosts: all
+  become: true
+  gather_facts: false
+
+  vars:
+    # Target rollback tag (can be overridden with -e rollback_tag=<version>)
+    rollback_tag: "1.2.2"
+
+  tasks:
+    - name: Display rollback target information
+      ansible.builtin.debug:
+        msg: "==> Initiating automated rollback to previous stable release: {{ app_image }}:{{ rollback_tag }}"
+
+    - name: Pull previous stable Docker image
+      community.docker.docker_image:
+        name: "{{ app_image }}:{{ rollback_tag }}"
+        source: pull
+        state: present
+
+    - name: Stop and remove current application container
+      community.docker.docker_container:
+        name: cbms-app
+        state: absent
+
+    - name: Deploy previous stable CBMS container (Rollback)
+      community.docker.docker_container:
+        name: cbms-app
+        image: "{{ app_image }}:{{ rollback_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: cbms-net
+        env_file: "{{ env_file_path }}"
+        published_ports:
+          - "{{ app_port }}:{{ app_port }}"
+
+    - name: Verify application recovery and health check on port {{ app_port }}
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_port }}"
+        status_code: 200
+        timeout: 5
+      register: rollback_health
+      until: rollback_health.status == 200
+      retries: 12
+      delay: 5
+
+    - name: Confirm successful rollback
+      ansible.builtin.debug:
+        msg: "==> SUCCESS: Application successfully rolled back and verified healthy on {{ app_image }}:{{ rollback_tag }}"

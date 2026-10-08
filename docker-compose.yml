@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:8
+    container_name: cbms-db
+    restart: unless-stopped
+    environment:
+    
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cbms_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - cbms-db-data:/var/lib/mysql
+    networks:
+      - cbms-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cbms-app
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/cbms_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cbms-net
+
+networks:
+  cbms-net:
+    name: cbms-net
+
+volumes:
+  cbms-db-data:
