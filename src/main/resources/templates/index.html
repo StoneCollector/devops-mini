@@ -3,77 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Kitchens &amp; Takeaway Directory - Smart Catering Services</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v='2.1')}">
+    <title>Catering &amp; Takeaway Kitchens - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.2')}">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
 
     <main class="page-container">
-        <!-- Live Operating Hero Banner -->
-        <div style="background: linear-gradient(135deg, #0f766e 0%, #0f172a 100%); color: white; border-radius: var(--radius-lg); padding: 2.25rem 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-lg);">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-                <div style="display: flex; align-items: center; gap: 0.6rem;">
-                    <span style="background: #ef4444; color: white; font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.65rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 0.35rem;">
-                        <span style="display: inline-block; width: 7px; height: 7px; background: white; border-radius: 50%; animation: pulse 1.5s infinite;"></span>
-                        LIVE DIRECTORY
-                    </span>
-                    <span style="color: #94a3b8; font-size: 0.88rem;">
-                        System Time: <strong style="color: #f8fafc;" th:text="${#temporals.format(currentTime, 'hh:mm a')}">10:22 PM</strong> • <span th:text="${#temporals.format(currentDate, 'EEEE, MMM dd, yyyy')}">Wednesday, Oct 14, 2026</span>
-                    </span>
+        <!-- Hero Banner with Live Operational Clock -->
+        <section class="hero-banner">
+            <div class="hero-content">
+                <div class="hero-time-pill">
+                    <span class="pulse-dot"></span>
+                    <span class="hero-time-text" th:text="${#temporals.format(currentTime, 'hh:mm a')}">10:49 PM</span>
+                    <span class="hero-divider">&bull;</span>
+                    <span th:text="${#temporals.format(currentDate, 'EEEE, MMMM d, yyyy')}">Wednesday, October 14, 2026</span>
+                    <span class="hero-divider">&bull;</span>
+                    <span style="color: #34d399; font-weight: 600;">Kitchens accepting orders</span>
                 </div>
-                <div>
-                    <a th:href="@{/events/book}" id="heroCateringBtn" class="btn btn-accent btn-sm" style="font-weight: 700;">
-                        🎉 Need Full Catering for an Event?
-                    </a>
-                </div>
+
+                <h1 class="hero-headline">Handcrafted Catering &amp; Fresh Takeaway</h1>
+                <p class="hero-subhead">
+                    Browse verified professional kitchens currently preparing hot orders for instant takeaway collection, dine-in tables, or reserve full-service catering for your upcoming events.
+                </p>
             </div>
 
-            <h1 style="font-size: 2.1rem; font-weight: 800; color: white; margin: 0 0 0.6rem 0; letter-spacing: -0.02em;">
-                Currently Operating Kitchens &amp; Live Takeaways
-            </h1>
-            <p style="color: #cbd5e1; font-size: 1.05rem; max-width: 850px; margin: 0; line-height: 1.5;">
-                Real-time catering directory. Only kitchens available from current system time are listed. Caterers whose operating window closed earlier today are automatically hidden.
-            </p>
-        </div>
+            <div class="hero-concierge-card">
+                <div class="concierge-title">Hosting an Event or Banquet?</div>
+                <p class="concierge-desc">Custom multi-course menus, on-site serving staff, and equipment setup for weddings &amp; corporate gatherings.</p>
+                <a th:href="@{/events/book}" id="heroCateringBtn" class="btn btn-accent btn-sm" style="font-weight: 700; width: 100%;">
+                    Book Event Catering &rarr;
+                </a>
+            </div>
+        </section>
 
         <!-- Filter & Search Toolbar -->
-        <div class="filter-card" style="margin-bottom: 2rem;">
+        <div class="filter-card">
             <form th:action="@{/}" method="get" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
                 <!-- Service Type Quick Tabs -->
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <div class="filter-pills">
                     <a th:href="@{/(filter='all', q=${searchQuery})}" 
-                       class="btn btn-sm" 
+                       class="pill-filter" 
                        id="filterAll"
-                       th:classappend="${activeFilter == 'all' or activeFilter == null} ? 'btn-primary' : 'btn-outline-dark'"
-                       style="border-radius: 9999px; padding: 0.45rem 1.15rem; font-weight: 600;">
-                        🌟 All Open Now
+                       th:classappend="${activeFilter == 'all' or activeFilter == null} ? 'active' : ''">
+                        All Open Kitchens
                     </a>
 
                     <a th:href="@{/(filter='takeaway', q=${searchQuery})}" 
-                       class="btn btn-sm" 
+                       class="pill-filter" 
                        id="filterTakeaway"
-                       th:classappend="${activeFilter == 'takeaway'} ? 'btn-primary' : 'btn-outline-dark'"
-                       style="border-radius: 9999px; padding: 0.45rem 1.15rem; font-weight: 600;">
-                        🥡 Takeaway Ready
+                       th:classappend="${activeFilter == 'takeaway'} ? 'active' : ''">
+                        Takeaway Ready
                     </a>
 
                     <a th:href="@{/(filter='dinein', q=${searchQuery})}" 
-                       class="btn btn-sm" 
+                       class="pill-filter" 
                        id="filterDineIn"
-                       th:classappend="${activeFilter == 'dinein'} ? 'btn-primary' : 'btn-outline-dark'"
-                       style="border-radius: 9999px; padding: 0.45rem 1.15rem; font-weight: 600;">
-                        🍽️ Ready to Dine (Dine-in)
+                       th:classappend="${activeFilter == 'dinein'} ? 'active' : ''">
+                        Ready to Dine
                     </a>
                 </div>
 
                 <!-- Keyword Search -->
-                <div style="display: flex; gap: 0.5rem; flex: 1; max-width: 420px; min-width: 260px;">
+                <div style="display: flex; gap: 0.5rem; flex: 1; max-width: 440px; min-width: 260px;">
                     <input type="hidden" name="filter" th:value="${activeFilter}">
-                    <input type="text" name="q" class="form-control" placeholder="Search kitchen, dish, or cuisine..." 
-                           th:value="${searchQuery}" style="font-size: 0.9rem;">
+                    <input type="text" name="q" class="form-control" placeholder="Search by kitchen, cuisine, or specialty..." 
+                           th:value="${searchQuery}" style="font-size: 0.88rem;">
                     <button type="submit" id="searchBtn" class="btn btn-secondary btn-sm" style="font-weight: 700; white-space: nowrap;">
-                        🔍 Search
+                        Search
                     </button>
                     <a th:if="${searchQuery != null and !searchQuery.isEmpty()}" th:href="@{/(filter=${activeFilter})}" class="btn btn-outline-dark btn-sm">Clear</a>
                 </div>
@@ -82,169 +79,144 @@
 
         <!-- Vendor Count Headline -->
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
-            <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin: 0;">
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin: 0;">
                 <span th:text="${vendors.size()}">2</span> Kitchens Open Right Now
             </h2>
             <span style="font-size: 0.85rem; color: var(--text-muted);">
-                Browse freely as a guest • Sign in only when you book
+                Browse freely as a guest &bull; Sign in only to confirm order
             </span>
         </div>
 
         <!-- Empty State -->
-        <div th:if="${vendors.isEmpty()}" style="text-align: center; padding: 4rem 2rem; background: white; border-radius: var(--radius-lg); border: 2px dashed var(--border-color); margin-bottom: 2rem;">
-            <div style="font-size: 3.5rem; margin-bottom: 1rem;">🌙</div>
-            <h3 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 0.5rem;">No Kitchens Open Matching Your Filter</h3>
-            <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 1.5rem auto;">
-                Vendors whose operating hours closed before the current time are not visible right now. Please check back during open hours or remove filters to see available services.
+        <div th:if="${vendors.isEmpty()}" style="text-align: center; padding: 4rem 2rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed rgba(255, 255, 255, 0.15); margin-bottom: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.8;">🌙</div>
+            <h3 style="font-size: 1.35rem; color: #ffffff; margin-bottom: 0.5rem;">No Kitchens Open Matching Your Filter</h3>
+            <p style="color: var(--text-muted); max-width: 520px; margin: 0 auto 1.5rem auto; line-height: 1.5;">
+                Operating hours for some caterers may have ended for today. Try adjusting your service filters or browse again during standard operating hours.
             </p>
             <a th:href="@{/}" class="btn btn-primary">Reset Filters</a>
         </div>
 
-        <!-- Grid of Available Live Vendors -->
-        <div class="vendor-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
-            <div th:each="v : ${vendors}" class="vendor-live-card" 
-                 style="background: white; border-radius: var(--radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s;">
+        <!-- Landscape Kitchen Listing Cards -->
+        <div class="kitchen-listing-feed">
+            <div th:each="v : ${vendors}" class="kitchen-card">
                 
-                <!-- Card Top Header -->
-                <div style="padding: 1.25rem 1.25rem 1rem 1.25rem; border-bottom: 1px solid var(--border-color); background: #fafafa;">
-                    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem;">
-                        <div>
-                            <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem 0;" 
-                                th:text="${v.profile.businessName}">
-                                Chef Mario Grand Catering
-                            </h3>
-                            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;" 
-                                  th:text="${v.vendor.name}">
-                                Mario Rossi
+                <!-- Column 1: Identity, Hours, Service Badges & Logistics -->
+                <div class="kitchen-col-info">
+                    <div class="kitchen-header-meta">
+                        <h3 class="kitchen-title" th:text="${v.profile.businessName}">Chef Mario Grand Catering &amp; Banquets</h3>
+                        <div th:if="${v.vendor.name != null and !#strings.equalsIgnoreCase(v.vendor.name, v.profile.businessName)}" 
+                             class="kitchen-subtitle" 
+                             th:text="'Managed by ' + ${v.vendor.name}">
+                            Managed by Mario Rossi
+                        </div>
+                    </div>
+
+                    <!-- Subtle, typography-led open status -->
+                    <div class="kitchen-status-line">
+                        <span class="pulse-dot"></span>
+                        <span class="status-open-text">Open now</span>
+                        <span class="status-closing-text" th:text="'&bull; Closes ' + ${v.formattedClosingTime}">&bull; Closes 11:59 PM</span>
+                    </div>
+
+                    <!-- Service Badges -->
+                    <div class="service-capsules">
+                        <span th:if="${v.takeawayActive}" class="service-pill pill-takeaway">
+                            Takeaway Ready
+                        </span>
+
+                        <th:block th:if="${v.profile.readyToDineEnabled}">
+                            <span th:if="${v.readyToDineActive}" class="service-pill pill-dinein">
+                                Dine-in (<span th:text="${v.formattedDineInHours}">11:00 AM – 11:00 PM</span>)
                             </span>
-                        </div>
-                        <span style="background: rgba(16, 185, 129, 0.15); color: #047857; font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.55rem; border-radius: 9999px; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <span style="display: inline-block; width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span>
-                            OPEN NOW
+                            <span th:if="${!v.readyToDineActive}" class="service-pill pill-closed">
+                                Dine-in Closed (<span th:text="${v.formattedDineInHours}">Opens 11:00 AM</span>)
+                            </span>
+                        </th:block>
+
+                        <span th:if="${!v.profile.readyToDineEnabled}" class="service-pill pill-closed">
+                            Takeaway Only
                         </span>
                     </div>
 
-                    <!-- Operational Hours -->
-                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #475569;">
-                        <span>🕒 Kitchen Hours:</span>
-                        <strong th:text="${v.formattedOperatingHours}">08:00 AM – 11:59 PM</strong>
+                    <!-- Logistics Info -->
+                    <div class="kitchen-logistics">
+                        <div class="logistic-row">
+                            <span class="logistic-icon">&#128205;</span>
+                            <span th:text="${v.profile.businessAddress != null ? v.profile.businessAddress : v.vendor.addressLine}">Plot 14, Kitchen Industrial Zone</span>
+                        </div>
+                        <div class="logistic-row">
+                            <span class="logistic-icon">&#128222;</span>
+                            <span th:text="${v.profile.businessPhone != null ? v.profile.businessPhone : v.vendor.phoneNumber}">9876543201</span>
+                        </div>
+                        <div class="logistic-row" style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.15rem;">
+                            <span th:text="${v.profile.serviceRadius} + ' km radius' + (${v.profile.advanceBookingDays == 0 ? ' &bull; Same-day orders' : ' &bull; ' + v.profile.advanceBookingDays + ' days notice'})">35 km radius &bull; Same-day orders</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Service Capabilities & Badges -->
-                <div style="padding: 1rem 1.25rem; background: #f8fafc; border-bottom: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: 0.45rem;">
-                    <!-- Takeaway Badge -->
-                    <span th:if="${v.takeawayActive}" 
-                          style="background: #e0f2fe; color: #0369a1; font-size: 0.76rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.3rem;">
-                        🥡 Takeaway Available
-                    </span>
+                <!-- Column 2: Live Menus Showcase (Wide horizontal grid) -->
+                <div class="kitchen-col-menus">
+                    <div class="menus-heading">Featured Menus &amp; Dishes</div>
 
-                    <!-- Ready to Dine Badges -->
-                    <th:block th:if="${v.profile.readyToDineEnabled}">
-                        <span th:if="${v.readyToDineActive}" 
-                              style="background: #dcfce7; color: #15803d; font-size: 0.76rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.3rem;">
-                            🍽️ Ready to Dine (<span th:text="${v.formattedDineInHours}">11:00 AM – 11:00 PM</span>)
-                        </span>
-                        <span th:if="${!v.readyToDineActive}" 
-                              style="background: #fef3c7; color: #b45309; font-size: 0.76rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 0.3rem;">
-                            ⏳ Dine-in Closed Now (<span th:text="${v.formattedDineInHours}">Opens 11:00 AM</span>)
-                        </span>
-                    </th:block>
-
-                    <!-- Takeaway Only Badge if ready-to-dine is disabled -->
-                    <span th:if="${!v.profile.readyToDineEnabled}" 
-                          style="background: #f1f5f9; color: #64748b; font-size: 0.76rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: var(--radius-sm);">
-                        📦 Takeaway Only (No Dine-in)
-                    </span>
-                </div>
-
-                <!-- Kitchen Address & Logistics Details -->
-                <div style="padding: 1rem 1.25rem; font-size: 0.85rem; color: var(--text-main); flex: 1;">
-                    <div style="display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.45rem;">
-                        <span style="color: var(--primary-color);">📍</span>
-                        <span th:text="${v.profile.businessAddress != null ? v.profile.businessAddress : v.vendor.addressLine}">Plot 14, Kitchen Industrial Zone, Mumbai</span>
+                    <div th:if="${v.cuisines.isEmpty()}" class="empty-menu-notice">
+                        Custom multi-course menu planning available on direct booking.
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.45rem;">
-                        <span style="color: var(--primary-color);">📞</span>
-                        <span th:text="${v.profile.businessPhone != null ? v.profile.businessPhone : v.vendor.phoneNumber}">9876543201</span>
-                    </div>
-
-                    <div style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
-                        <span>🛵 Radius: <strong th:text="${v.profile.serviceRadius} + ' km'">35 km</strong></span>
-                        <span>⏱️ Notice: <strong th:text="${v.profile.advanceBookingDays == 0 ? 'Same-day' : v.profile.advanceBookingDays + ' days'}">2 days</strong></span>
-                    </div>
-
-                    <!-- Available Cuisines Section -->
-                    <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);">
-                        <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.45rem;">
-                            Featured Cuisines &amp; Menus:
-                        </div>
-
-                        <div th:if="${v.cuisines.isEmpty()}" style="color: var(--text-muted); font-size: 0.82rem; font-style: italic;">
-                            Menu customization available on direct booking.
-                        </div>
-
-                        <div th:if="${!v.cuisines.isEmpty()}" style="display: flex; flex-direction: column; gap: 0.4rem;">
-                            <div th:each="c : ${v.cuisines}" 
-                                 style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.4rem 0.65rem; display: flex; justify-content: space-between; align-items: center;">
-                                <div style="display: flex; flex-direction: column;">
-                                    <strong style="font-size: 0.84rem; color: var(--text-main);" th:text="${c.cuisineName}">Mughlai Feast</strong>
-                                    <span style="font-size: 0.72rem; color: var(--text-muted);" th:text="${c.dietaryFlags}">HALAL</span>
-                                </div>
-                                <span style="font-weight: 700; color: var(--primary-color); font-size: 0.88rem;">
-                                    ₹<span th:text="${#numbers.formatDecimal(c.pricePerHead, 1, 0)}">750</span>
-                                </span>
+                    <div th:if="${!v.cuisines.isEmpty()}" class="menus-grid">
+                        <div th:each="c : ${v.cuisines}" class="menu-card-compact">
+                            <div>
+                                <div class="menu-dish-name" th:text="${c.cuisineName}">Mughlai Feast</div>
+                                <span class="menu-dietary-chip" th:text="${c.dietaryFlags}">HALAL</span>
+                            </div>
+                            <div class="menu-price">
+                                &#8377;<span th:text="${#numbers.formatDecimal(c.pricePerHead, 1, 0)}">750</span>
+                                <span class="price-sub">/ person</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Booking Buttons -->
-                <div style="padding: 1rem 1.25rem; background: #fafafa; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                        <!-- Ready to Dine Action Button -->
-                        <a th:if="${v.readyToDineActive}" 
-                           th:href="@{/events/book(vendorId=${v.vendor.id}, serviceType='AT_VENUE')}" 
-                           class="btn btn-primary btn-sm"
-                           th:id="'bookDineBtn-' + ${v.vendor.id}"
-                           style="font-weight: 700; padding: 0.5rem 0.75rem; text-align: center;">
-                            🍽️ Book Dine-in
-                        </a>
-                        <span th:if="${v.profile.readyToDineEnabled and !v.readyToDineActive}" 
-                              class="btn btn-sm" 
-                              style="background: #e2e8f0; color: #94a3b8; cursor: not-allowed; padding: 0.5rem 0.75rem; text-align: center; font-size: 0.8rem;">
-                            🍽️ Dine-in Closed
-                        </span>
+                <!-- Column 3: Direct Actions & Booking -->
+                <div class="kitchen-col-actions">
+                    <!-- Dine-in Action -->
+                    <a th:if="${v.readyToDineActive}" 
+                       th:href="@{/events/book(vendorId=${v.vendor.id}, serviceType='AT_VENUE')}" 
+                       class="btn btn-primary btn-kitchen-action"
+                       th:id="'bookDineBtn-' + ${v.vendor.id}">
+                        Reserve Dine-In
+                    </a>
+                    <span th:if="${v.profile.readyToDineEnabled and !v.readyToDineActive}" 
+                          class="btn btn-secondary btn-kitchen-action" 
+                          style="opacity: 0.6; cursor: not-allowed; font-size: 0.82rem;">
+                        Dine-in Closed
+                    </span>
 
-                        <!-- Takeaway Action Button -->
-                        <a th:if="${v.takeawayActive}" 
-                           th:href="@{/events/book(vendorId=${v.vendor.id}, serviceType='TAKEAWAY')}" 
-                           class="btn btn-secondary btn-sm"
-                           th:id="'orderTakeawayBtn-' + ${v.vendor.id}"
-                           style="font-weight: 700; padding: 0.5rem 0.75rem; text-align: center;">
-                            🥡 Takeaway Order
-                        </a>
-                    </div>
+                    <!-- Takeaway Action -->
+                    <a th:if="${v.takeawayActive}" 
+                       th:href="@{/events/book(vendorId=${v.vendor.id}, serviceType='TAKEAWAY')}" 
+                       class="btn btn-secondary btn-kitchen-action"
+                       th:id="'orderTakeawayBtn-' + ${v.vendor.id}">
+                        Order Takeaway
+                    </a>
 
                     <!-- Full Event Catering Service -->
                     <a th:href="@{/events/book(vendorId=${v.vendor.id})}" 
-                       class="btn btn-outline-dark btn-sm"
-                       th:id="'fullCateringBtn-' + ${v.vendor.id}"
-                       style="text-align: center; font-size: 0.82rem; padding: 0.4rem 0.75rem;">
-                        📋 Book Event Catering (Weddings / Banquets)
+                       class="btn-catering-secondary"
+                       th:id="'fullCateringBtn-' + ${v.vendor.id}">
+                        Book Full Catering &rarr;
                     </a>
                 </div>
             </div>
         </div>
 
         <!-- Information Callout for Guests -->
-        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <span style="font-size: 1.6rem;">💡</span>
+        <div style="background: rgba(13, 39, 36, 0.7); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <span style="font-size: 1.5rem; opacity: 0.85;">💡</span>
                 <div>
-                    <strong style="color: var(--text-main); font-size: 0.95rem; display: block;">Browsing as a Guest?</strong>
-                    <span style="color: var(--text-muted); font-size: 0.85rem;">Feel free to check out menus and caterers. When you select an order or table, we will prompt you to quickly sign in or register.</span>
+                    <strong style="color: #ffffff; font-size: 0.95rem; display: block;">Browsing as a Guest?</strong>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Explore caterers, menus, and operating hours freely. You'll be prompted to sign in or create an account only when confirming a booking or order.</span>
                 </div>
             </div>
             <div th:if="${session.userId == null}">
@@ -252,9 +224,5 @@
             </div>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
-    </footer>
 </body>
 </html>

@@ -22,7 +22,7 @@
         </div>
 
         <!-- Status Banner -->
-        <div style="background: white; border-radius: var(--radius-md); padding: 1.25rem 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <div style="background: var(--bg-card); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
             <div>
                 <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Status</span>
                 <div style="margin-top: 0.25rem;">
@@ -91,7 +91,7 @@
                     </div>
 
                     <!-- Daily Utilization Context -->
-                    <div th:if="${dailyUsage != null}" style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted); background: #f8fafc; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div th:if="${dailyUsage != null}" style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted); background: var(--bg-card-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
                         <strong>Vendor Utilization on <span th:text="${event.eventDate}"></span>:</strong>
                         Staff: <span th:text="${dailyUsage.staffUsed} + '/' + ${dailyUsage.staffTotal}"></span> •
                         Utensils: <span th:text="${dailyUsage.utensilsUsed} + '/' + ${dailyUsage.utensilsTotal}"></span> •
@@ -212,9 +212,5 @@
             </div>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
-    </footer>
 </body>
 </html>

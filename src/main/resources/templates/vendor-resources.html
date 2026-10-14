@@ -26,28 +26,28 @@
 
         <!-- Metric Cards -->
         <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <div class="metric-card" style="background: var(--bg-card); border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍🍳</div>
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary-color);" th:text="${pool.staffCount}">12</div>
                 <div style="font-weight: 600; color: var(--text-main);">Available Serving Staff</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Servers, Captains &amp; Kitchen</div>
             </div>
 
-            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <div class="metric-card" style="background: var(--bg-card); border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🍽️</div>
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-color);" th:text="${pool.utensilSets}">150</div>
                 <div style="font-weight: 600; color: var(--text-main);">Utensil &amp; Place Sets</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Plates, Cutlery &amp; Glassware</div>
             </div>
 
-            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <div class="metric-card" style="background: var(--bg-card); border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚚</div>
                 <div style="font-size: 1.75rem; font-weight: 700; color: #0284c7;" th:text="${pool.deliveryVehicles}">3</div>
                 <div style="font-weight: 600; color: var(--text-main);">Delivery Vehicles</div>
                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Insulated transport fleet</div>
             </div>
 
-            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <div class="metric-card" style="background: var(--bg-card); border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏛️</div>
                 <div style="font-size: 1.75rem; font-weight: 700; color: #7c3aed;" th:text="${pool.venueCoverCapacity}">100</div>
                 <div style="font-weight: 600; color: var(--text-main);">Venue Cover Capacity</div>
@@ -116,9 +116,5 @@
             </form>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
-    </footer>
 </body>
 </html>

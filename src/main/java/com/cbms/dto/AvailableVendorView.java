@@ -68,6 +68,13 @@ public class AvailableVendorView {
         return profile.getOpeningTime().format(TIME_FORMATTER) + " – " + profile.getClosingTime().format(TIME_FORMATTER);
     }
 
+    public String getFormattedClosingTime() {
+        if (profile == null || profile.getClosingTime() == null) {
+            return "midnight";
+        }
+        return profile.getClosingTime().format(TIME_FORMATTER);
+    }
+
     public String getFormattedDineInHours() {
         if (profile == null || !profile.isReadyToDineEnabled()) {
             return "Dine-in not offered";
