@@ -279,26 +279,13 @@ body {
     min-width: 320px;
 }
 
-.hero-time-pill {
-    display: inline-flex;
+.hero-timestamp {
+    display: flex;
     align-items: center;
-    gap: 0.55rem;
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 9999px;
-    padding: 0.35rem 0.95rem;
-    margin-bottom: 1rem;
-    font-size: 0.86rem;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+    font-size: 0.92rem;
     color: #cbd5e1;
-}
-
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background: #34d399;
-    border-radius: 50%;
-    display: inline-block;
-    box-shadow: 0 0 10px #34d399;
 }
 
 .hero-time-text {
@@ -361,6 +348,12 @@ body {
     padding: 1.25rem 1.5rem;
     margin-bottom: 2rem;
     box-shadow: var(--shadow-sm);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.filter-card:hover {
+    background-color: #11342f;
+    border-color: rgba(20, 184, 166, 0.25);
 }
 
 .filter-pills {
@@ -414,11 +407,12 @@ body {
     gap: 2rem;
     padding: 1.75rem 2rem;
     align-items: center;
-    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .kitchen-card:hover {
-    border-color: rgba(20, 184, 166, 0.35);
+    background-color: #143b36;
+    border-color: rgba(20, 184, 166, 0.4);
     transform: translateY(-2px);
     box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5);
 }
@@ -555,8 +549,8 @@ body {
 }
 
 .menu-card-compact:hover {
-    background: rgba(0, 0, 0, 0.35);
-    border-color: rgba(20, 184, 166, 0.25);
+    background: #11342f;
+    border-color: rgba(20, 184, 166, 0.35);
 }
 
 .menu-dish-name {
@@ -671,6 +665,57 @@ body {
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
     padding: 1.75rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+    background-color: #143b35;
+    border-color: rgba(20, 184, 166, 0.25);
+}
+
+.metric-card {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.metric-card:hover {
+    background-color: #143b35 !important;
+    border-color: rgba(20, 184, 166, 0.35);
+}
+
+.guest-callout-card {
+    background: rgba(13, 39, 36, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.guest-callout-card:hover {
+    background-color: rgba(20, 59, 54, 0.9);
+    border-color: rgba(20, 184, 166, 0.35);
+}
+
+.guest-auth-text {
+    font-size: 0.925rem;
+    color: #e2e8f0;
+}
+
+.guest-auth-link {
+    color: #2dd4bf;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+}
+
+.guest-auth-link:hover {
+    color: #5eead4;
 }
 
 .auth-card-container {
@@ -684,6 +729,12 @@ body {
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
     padding: 2.5rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-card:hover {
+    background-color: #143b35;
+    border-color: rgba(20, 184, 166, 0.25);
 }
 
 .auth-card h2 {
