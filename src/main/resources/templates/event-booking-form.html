@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Catering Event - Smart Catering Services</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v='3.0')}">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
@@ -43,13 +43,13 @@
                             </option>
                         </select>
                         <div th:if="${vendorProfile != null}" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
-                            📍 <span th:text="${vendorProfile.businessAddress != null ? vendorProfile.businessAddress : 'Registered Caterer'}"></span>
+                            <span th:text="${vendorProfile.businessAddress != null ? vendorProfile.businessAddress : 'Registered Caterer'}"></span>
                             <span th:if="${vendorProfile.serviceRadius != null}" th:text="' • Radius: ' + ${vendorProfile.serviceRadius} + ' km'"></span>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="occasionType" id="occasionTypeLabel">Occasion / Event Type</label>
+                        <label for="occasionType">Occasion / Event Type</label>
                         <select id="occasionType" name="occasionType" class="form-control" required>
                             <option th:each="occ : ${occasionTypes}" 
                                     th:value="${occ.name()}" 
@@ -68,42 +68,42 @@
                 <div class="form-group">
                     <label>Choose How You Want Catering Served</label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
-                        <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryOnly">
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryOnly">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <input type="radio" name="serviceType" value="DELIVERY_ONLY" 
                                        th:checked="${selectedServiceType == 'DELIVERY_ONLY' or selectedServiceType == null}" 
                                        onchange="updateServiceTypeFields(this.value)">
-                                <strong style="color: var(--text-main);">🚚 Delivery Only</strong>
+                                <strong style="color: var(--text-main);">Delivery Only</strong>
                             </div>
                             <span style="font-size: 0.82rem; color: var(--text-muted);">Food delivered in insulated containers. Self-serving setup.</span>
                         </label>
 
-                        <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryServing">
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryServing">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <input type="radio" name="serviceType" value="DELIVERY_WITH_SERVING" 
                                        th:checked="${selectedServiceType == 'DELIVERY_WITH_SERVING'}" 
                                        onchange="updateServiceTypeFields(this.value)">
-                                <strong style="color: var(--text-main);">👨‍🍳 Delivery with Serving Staff</strong>
+                                <strong style="color: var(--text-main);">Delivery with Serving Staff</strong>
                             </div>
                             <span style="font-size: 0.82rem; color: var(--text-muted);">Full catering delivery + buffet equipment + professional waitstaff.</span>
                         </label>
 
-                        <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optAtVenue">
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optAtVenue">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <input type="radio" name="serviceType" value="AT_VENUE" 
                                        th:checked="${selectedServiceType == 'AT_VENUE'}" 
                                        onchange="updateServiceTypeFields(this.value)">
-                                <strong style="color: var(--text-main);">🍽️ Ready to Dine / At Venue</strong>
+                                <strong style="color: var(--text-main);">Ready to Dine / At Venue</strong>
                             </div>
                             <span style="font-size: 0.82rem; color: var(--text-muted);">Host your dinner or function directly at caterer's venue/restaurant.</span>
                         </label>
 
-                        <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optTakeaway">
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optTakeaway">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <input type="radio" name="serviceType" value="TAKEAWAY" 
                                        th:checked="${selectedServiceType == 'TAKEAWAY'}" 
                                        onchange="updateServiceTypeFields(this.value)">
-                                <strong style="color: var(--text-main);">🥡 Takeaway / Self-Pickup</strong>
+                                <strong style="color: var(--text-main);">Takeaway / Self-Pickup</strong>
                             </div>
                             <span style="font-size: 0.82rem; color: var(--text-muted);">Trays packaged hot and ready for scheduled customer pickup.</span>
                         </label>
@@ -113,7 +113,7 @@
                 <!-- Conditional: Delivery Address -->
                 <div class="form-group" id="deliveryAddressGroup">
                     <label for="deliveryAddress">
-                        📍 Event Venue / Delivery Address <span style="color: #e11d48;">*</span>
+                        Event Venue / Delivery Address <span style="color: #f87171;">*</span>
                     </label>
                     <textarea id="deliveryAddress" name="deliveryAddress" class="form-control" rows="2" 
                               placeholder="Full address where food/setup will be delivered"
@@ -124,7 +124,7 @@
                 <!-- Conditional: Pickup Time Window -->
                 <div class="form-group" id="pickupTimeGroup" style="display: none;">
                     <label for="pickupTime">
-                        🥡 Scheduled Pickup Time Window <span style="color: #e11d48;">*</span>
+                        Scheduled Pickup Time Window <span style="color: #f87171;">*</span>
                     </label>
                     <input type="text" id="pickupTime" name="pickupTime" class="form-control" 
                            placeholder="e.g. 12:30 PM - 1:00 PM">
@@ -132,9 +132,9 @@
                 </div>
 
                 <!-- Conditional: Venue Capacity Banner -->
-                <div id="venueNoticeGroup" style="display: none; background-color: #f5f3ff; border: 1px solid #ddd6fe; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
-                    <h4 style="color: #6d28d9; margin-bottom: 0.25rem;">🏛️ At Venue Event Information</h4>
-                    <p style="font-size: 0.88rem; color: #4c1d95; line-height: 1.4;">
+                <div id="venueNoticeGroup" style="display: none; background: rgba(13, 148, 136, 0.12); border: 1px solid rgba(20, 184, 166, 0.3); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
+                    <h4 style="color: #5eead4; margin-bottom: 0.25rem;">At Venue Event Information</h4>
+                    <p style="font-size: 0.88rem; color: #ccfbf1; line-height: 1.4;">
                         Your event will be accommodated at the caterer's banquet space:
                         <strong th:text="${vendorProfile != null and vendorProfile.businessAddress != null ? vendorProfile.businessAddress : 'Vendor Premises'}">Vendor Address</strong>.
                         <span th:if="${resourcePool != null and resourcePool.venueCoverCapacity > 0}">
@@ -202,7 +202,7 @@
 
                 <div class="form-group">
                     <label for="guestCount">
-                        👥 Number of Expected Guests <span style="color: #e11d48;">*</span>
+                        Number of Expected Guests <span style="color: #f87171;">*</span>
                     </label>
                     <input type="number" id="guestCount" name="guestCount" class="form-control" 
                            min="1" max="2000" value="50" required oninput="calculateEstimates()">
@@ -230,48 +230,41 @@
     <script>
         const occasionsMap = {
             'TAKEAWAY': [
-                { value: 'FAMILY_MEAL', text: 'Family Dinner / Quick Meal' },
+                { value: 'FAMILY_MEAL', text: 'Family Meal / Casual Gathering' },
                 { value: 'OFFICE_LUNCH', text: 'Office / Team Lunch' },
                 { value: 'BIRTHDAY', text: 'Birthday / House Party' },
                 { value: 'SOCIAL', text: 'Social Get-Together' },
-                { value: 'RELIGIOUS', text: 'Religious Ceremony / Festival Food' },
-                { value: 'OTHER', text: 'Other Takeaway Order' }
+                { value: 'RELIGIOUS', text: 'Religious / Community Function' },
+                { value: 'OTHER', text: 'Other' }
             ],
             'AT_VENUE': [
                 { value: 'CASUAL_DINING', text: 'Casual Dining / Table Meal' },
                 { value: 'BIRTHDAY', text: 'Birthday Celebration' },
-                { value: 'ANNIVERSARY', text: 'Anniversary / Date Night' },
-                { value: 'CORPORATE', text: 'Corporate Dinner / Seminar' },
-                { value: 'SOCIAL', text: 'Social Gathering / Party' },
-                { value: 'WEDDING', text: 'Wedding / Reception Banquet' },
-                { value: 'OTHER', text: 'Other Gathering' }
+                { value: 'ANNIVERSARY', text: 'Anniversary Celebration' },
+                { value: 'CORPORATE', text: 'Corporate Event / Dinner' },
+                { value: 'SOCIAL', text: 'Social Gathering' },
+                { value: 'WEDDING', text: 'Wedding / Reception' },
+                { value: 'OTHER', text: 'Other' }
             ],
             'DELIVERY_ONLY': [
-                { value: 'CORPORATE', text: 'Corporate Event / Office Catering' },
+                { value: 'CORPORATE', text: 'Corporate Event' },
                 { value: 'OFFICE_LUNCH', text: 'Office / Team Lunch' },
-                { value: 'FAMILY_MEAL', text: 'Family Meal / Party Trays' },
+                { value: 'FAMILY_MEAL', text: 'Family Meal / Catering' },
                 { value: 'BIRTHDAY', text: 'Birthday Celebration' },
-                { value: 'SOCIAL', text: 'Social Gathering / Party' },
-                { value: 'RELIGIOUS', text: 'Religious Ceremony / Feast' },
+                { value: 'SOCIAL', text: 'Social Gathering' },
+                { value: 'RELIGIOUS', text: 'Religious / Community Function' },
                 { value: 'CONFERENCE', text: 'Conference / Seminar' },
-                { value: 'OTHER', text: 'Other Occasion' }
+                { value: 'OTHER', text: 'Other' }
             ],
             'DELIVERY_WITH_SERVING': [
                 { value: 'WEDDING', text: 'Wedding / Reception' },
-                { value: 'CORPORATE', text: 'Corporate Gala / Seminar' },
-                { value: 'CONFERENCE', text: 'Conference / Summit' },
+                { value: 'CORPORATE', text: 'Corporate Event' },
+                { value: 'CONFERENCE', text: 'Conference / Seminar' },
                 { value: 'BIRTHDAY', text: 'Birthday Celebration' },
-                { value: 'SOCIAL', text: 'Social Gathering / Banquet' },
-                { value: 'RELIGIOUS', text: 'Religious Ceremony / Feast' },
-                { value: 'OTHER', text: 'Other Occasion' }
+                { value: 'SOCIAL', text: 'Social Gathering' },
+                { value: 'RELIGIOUS', text: 'Religious / Community Function' },
+                { value: 'OTHER', text: 'Other' }
             ]
-        };
-
-        const occasionLabels = {
-            'TAKEAWAY': '🥡 Order Purpose / Takeaway Type',
-            'AT_VENUE': '🍽️ Dining Occasion / Table Purpose',
-            'DELIVERY_ONLY': '🚚 Delivery Occasion / Event Type',
-            'DELIVERY_WITH_SERVING': '👨‍🍳 Catering Occasion / Event Type'
         };
 
         function updateServiceTypeFields(serviceType) {
@@ -299,13 +292,8 @@
                 venueGroup.style.display = 'block';
             }
 
-            // Dynamically adjust Occasion Type label and options based on service model
+            // Adjust Occasion options dynamically to match selected service type
             const occasionSelect = document.getElementById('occasionType');
-            const occasionLabel = document.getElementById('occasionTypeLabel');
-            if (occasionLabel && occasionLabels[serviceType]) {
-                occasionLabel.innerText = occasionLabels[serviceType];
-            }
-
             if (occasionSelect && occasionsMap[serviceType]) {
                 const currentVal = occasionSelect.value;
                 const newOptions = occasionsMap[serviceType];
