@@ -49,7 +49,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="occasionType">Occasion / Event Type</label>
+                        <label for="occasionType" id="occasionTypeLabel">Occasion / Event Type</label>
                         <select id="occasionType" name="occasionType" class="form-control" required>
                             <option th:each="occ : ${occasionTypes}" 
                                     th:value="${occ.name()}" 
@@ -228,6 +228,52 @@
     </main>
 
     <script>
+        const occasionsMap = {
+            'TAKEAWAY': [
+                { value: 'FAMILY_MEAL', text: 'Family Dinner / Quick Meal' },
+                { value: 'OFFICE_LUNCH', text: 'Office / Team Lunch' },
+                { value: 'BIRTHDAY', text: 'Birthday / House Party' },
+                { value: 'SOCIAL', text: 'Social Get-Together' },
+                { value: 'RELIGIOUS', text: 'Religious Ceremony / Festival Food' },
+                { value: 'OTHER', text: 'Other Takeaway Order' }
+            ],
+            'AT_VENUE': [
+                { value: 'CASUAL_DINING', text: 'Casual Dining / Table Meal' },
+                { value: 'BIRTHDAY', text: 'Birthday Celebration' },
+                { value: 'ANNIVERSARY', text: 'Anniversary / Date Night' },
+                { value: 'CORPORATE', text: 'Corporate Dinner / Seminar' },
+                { value: 'SOCIAL', text: 'Social Gathering / Party' },
+                { value: 'WEDDING', text: 'Wedding / Reception Banquet' },
+                { value: 'OTHER', text: 'Other Gathering' }
+            ],
+            'DELIVERY_ONLY': [
+                { value: 'CORPORATE', text: 'Corporate Event / Office Catering' },
+                { value: 'OFFICE_LUNCH', text: 'Office / Team Lunch' },
+                { value: 'FAMILY_MEAL', text: 'Family Meal / Party Trays' },
+                { value: 'BIRTHDAY', text: 'Birthday Celebration' },
+                { value: 'SOCIAL', text: 'Social Gathering / Party' },
+                { value: 'RELIGIOUS', text: 'Religious Ceremony / Feast' },
+                { value: 'CONFERENCE', text: 'Conference / Seminar' },
+                { value: 'OTHER', text: 'Other Occasion' }
+            ],
+            'DELIVERY_WITH_SERVING': [
+                { value: 'WEDDING', text: 'Wedding / Reception' },
+                { value: 'CORPORATE', text: 'Corporate Gala / Seminar' },
+                { value: 'CONFERENCE', text: 'Conference / Summit' },
+                { value: 'BIRTHDAY', text: 'Birthday Celebration' },
+                { value: 'SOCIAL', text: 'Social Gathering / Banquet' },
+                { value: 'RELIGIOUS', text: 'Religious Ceremony / Feast' },
+                { value: 'OTHER', text: 'Other Occasion' }
+            ]
+        };
+
+        const occasionLabels = {
+            'TAKEAWAY': '🥡 Order Purpose / Takeaway Type',
+            'AT_VENUE': '🍽️ Dining Occasion / Table Purpose',
+            'DELIVERY_ONLY': '🚚 Delivery Occasion / Event Type',
+            'DELIVERY_WITH_SERVING': '👨‍🍳 Catering Occasion / Event Type'
+        };
+
         function updateServiceTypeFields(serviceType) {
             const deliveryGroup = document.getElementById('deliveryAddressGroup');
             const pickupGroup = document.getElementById('pickupTimeGroup');
@@ -252,6 +298,35 @@
                 document.getElementById('pickupTime').required = false;
                 venueGroup.style.display = 'block';
             }
+
+            // Dynamically adjust Occasion Type label and options based on service model
+            const occasionSelect = document.getElementById('occasionType');
+            const occasionLabel = document.getElementById('occasionTypeLabel');
+            if (occasionLabel && occasionLabels[serviceType]) {
+                occasionLabel.innerText = occasionLabels[serviceType];
+            }
+
+            if (occasionSelect && occasionsMap[serviceType]) {
+                const currentVal = occasionSelect.value;
+                const newOptions = occasionsMap[serviceType];
+                
+                occasionSelect.innerHTML = '';
+                let matched = false;
+                newOptions.forEach(opt => {
+                    const optionEl = document.createElement('option');
+                    optionEl.value = opt.value;
+                    optionEl.textContent = opt.text;
+                    if (opt.value === currentVal) {
+                        optionEl.selected = true;
+                        matched = true;
+                    }
+                    occasionSelect.appendChild(optionEl);
+                });
+                if (!matched && newOptions.length > 0) {
+                    occasionSelect.selectedIndex = 0;
+                }
+            }
+
             calculateEstimates();
         }
 

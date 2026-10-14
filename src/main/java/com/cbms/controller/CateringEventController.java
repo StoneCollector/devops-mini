@@ -89,7 +89,6 @@ public class CateringEventController {
                 : List.of();
         model.addAttribute("cuisines", availableCuisines);
         model.addAttribute("selectedCuisineId", cuisineId);
-        model.addAttribute("selectedServiceType", serviceType != null ? serviceType : "DELIVERY_ONLY");
 
         // Fetch vendor resource pool & profile for context
         if (selectedVendorId != null) {
@@ -100,7 +99,14 @@ public class CateringEventController {
             poolOpt.ifPresent(pool -> model.addAttribute("resourcePool", pool));
         }
 
-        model.addAttribute("occasionTypes", OccasionType.values());
+        ServiceType selectedTypeEnum = ServiceType.DELIVERY_ONLY;
+        if (serviceType != null) {
+            try {
+                selectedTypeEnum = ServiceType.valueOf(serviceType);
+            } catch (Exception ignored) {}
+        }
+        model.addAttribute("selectedServiceType", selectedTypeEnum.name());
+        model.addAttribute("occasionTypes", OccasionType.getOccasionsFor(selectedTypeEnum));
         model.addAttribute("serviceTypes", ServiceType.values());
         model.addAttribute("serviceStyles", ServiceStyle.values());
         model.addAttribute("minDate", LocalDate.now().plusDays(1).toString());
@@ -158,7 +164,14 @@ public class CateringEventController {
             List<VendorCuisine> availableCuisines = cuisineRepository.findByVendorIdOrderByCuisineNameAsc(vendorId);
             model.addAttribute("cuisines", availableCuisines);
 
-            model.addAttribute("occasionTypes", OccasionType.values());
+            ServiceType selectedTypeEnum = ServiceType.DELIVERY_ONLY;
+            if (serviceType != null) {
+                try {
+                    selectedTypeEnum = ServiceType.valueOf(serviceType);
+                } catch (Exception ignored) {}
+            }
+            model.addAttribute("selectedServiceType", selectedTypeEnum.name());
+            model.addAttribute("occasionTypes", OccasionType.getOccasionsFor(selectedTypeEnum));
             model.addAttribute("serviceTypes", ServiceType.values());
             model.addAttribute("serviceStyles", ServiceStyle.values());
             model.addAttribute("minDate", LocalDate.now().plusDays(1).toString());
