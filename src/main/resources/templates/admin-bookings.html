@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Bookings - Smart Catering Services Admin</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v='3.0')}">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
@@ -20,6 +20,67 @@
             </div>
         </div>
 
+        <!-- Section 1: Full Catering Events (v2) -->
+        <div th:if="${events != null and !#lists.isEmpty(events)}" style="margin-bottom: 2.5rem;">
+            <h2 style="font-size: 1.3rem; color: var(--primary-color); margin-bottom: 0.75rem;">🍽️ Comprehensive Catering Event Orders</h2>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer &amp; Contact</th>
+                            <th>Vendor</th>
+                            <th>Occasion &amp; Service</th>
+                            <th>Date &amp; Time</th>
+                            <th>Menu</th>
+                            <th>Guests</th>
+                            <th>Resources Reserved</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ev : ${events}">
+                            <td style="font-weight: 700;" th:text="'#' + ${ev.id}"></td>
+                            <td>
+                                <strong th:text="${ev.customer.name}"></strong>
+                                <div th:if="${ev.customer.phoneNumber}" style="font-size: 0.8rem; color: var(--text-muted);" th:text="'📞 ' + ${ev.customer.phoneNumber}"></div>
+                            </td>
+                            <td th:text="${ev.vendor.name}"></td>
+                            <td>
+                                <div style="font-weight: 600;" th:text="${ev.occasionType.displayName}"></div>
+                                <span class="role-badge badge-customer" style="font-size: 0.72rem;" th:text="${ev.serviceType.displayName}"></span>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;" th:text="${ev.eventDate}"></div>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);" th:text="(${ev.eventTimeFrom != null ? ev.eventTimeFrom : ''}) + ' - ' + (${ev.eventTimeTo != null ? ev.eventTimeTo : ''})"></div>
+                            </td>
+                            <td>
+                                <span th:if="${ev.cuisine != null}" th:text="${ev.cuisine.cuisineName}"></span>
+                                <span th:if="${ev.cuisine == null}" style="color: var(--text-muted); font-style: italic;">Standard Custom</span>
+                            </td>
+                            <td style="font-weight: 600;" th:text="${ev.guestCount}"></td>
+                            <td style="font-size: 0.8rem;">
+                                <div>Staff: <strong th:text="${ev.staffConsumed}"></strong></div>
+                                <div>Utensils: <strong th:text="${ev.utensilsConsumed}"></strong></div>
+                                <div>Vehicle: <strong th:text="${ev.vehicleConsumed}"></strong></div>
+                            </td>
+                            <td>
+                                <span class="status-badge"
+                                      th:classappend="${ev.status.name() == 'CONFIRMED' ? 'status-confirmed' : (ev.status.name() == 'CANCELLED' ? 'status-cancelled' : 'status-pending')}"
+                                      th:text="${ev.status}">
+                                </span>
+                            </td>
+                            <td>
+                                <a th:href="@{/events/{id}(id=${ev.id})}" class="btn btn-secondary btn-sm">Logistics</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 style="font-size: 1.25rem; color: var(--secondary-color); margin-bottom: 0.75rem;">Slot Bookings</h2>
         <div class="table-wrapper">
             <table class="data-table">
                 <thead>
@@ -63,9 +124,5 @@
             </table>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
-    </footer>
 </body>
 </html>

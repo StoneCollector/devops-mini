@@ -32,6 +32,24 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "address_line")
+    private String addressLine;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "pincode")
+    private String pincode;
+
+    @Column(name = "organization_name")
+    private String organizationName;
+
+    @Column(name = "gst_number")
+    private String gstNumber;
+
     public User() {}
 
     public User(String name, String email, String password) {
@@ -58,6 +76,18 @@ public class User {
         this.active = active;
     }
 
+    public User(String name, String email, String password, Role role, String phoneNumber, String addressLine, String city, String pincode) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = (role != null) ? role : Role.CUSTOMER;
+        this.phoneNumber = phoneNumber;
+        this.addressLine = addressLine;
+        this.city = city;
+        this.pincode = pincode;
+        this.active = true;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
@@ -75,4 +105,22 @@ public class User {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public String getAddressLine() { return addressLine; }
+    public void setAddressLine(String addressLine) { this.addressLine = addressLine; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getPincode() { return pincode; }
+    public void setPincode(String pincode) { this.pincode = pincode; }
+
+    public String getOrganizationName() { return organizationName; }
+    public void setOrganizationName(String organizationName) { this.organizationName = organizationName; }
+
+    public String getGstNumber() { return gstNumber; }
+    public void setGstNumber(String gstNumber) { this.gstNumber = gstNumber; }
 }

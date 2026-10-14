@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Catering Event - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='3.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>Book Catering Service &amp; Event</h1>
+                <p class="page-subtitle">Configure your catering package, service type, and logistics with guaranteed resource reservation</p>
+            </div>
+            <div>
+                <a th:href="@{/slots}" class="btn btn-secondary">Browse Slots</a>
+            </div>
+        </div>
+
+        <!-- Alert messages -->
+        <div class="alert alert-error" id="bookingErrorAlert" th:if="${error}" th:text="${error}"></div>
+
+        <div class="card" style="max-width: 880px; margin: 0 auto; padding: 2rem;">
+            <form th:action="@{/events/book}" method="post" id="eventBookingForm">
+                
+                <!-- Section 1: Vendor & Occasion -->
+                <h3 style="margin-bottom: 1.25rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                    1. Vendor &amp; Occasion
+                </h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label for="vendorSelect">Select Caterer / Vendor</label>
+                        <select id="vendorSelect" name="vendorId" class="form-control" required onchange="window.location.href='/events/book?vendorId=' + this.value">
+                            <option th:each="v : ${vendors}" 
+                                    th:value="${v.id}" 
+                                    th:selected="${v.id == selectedVendorId}"
+                                    th:text="${v.name} + (${v.city != null} ? ' (' + ${v.city} + ')' : '')">
+                                Chef Mario Catering
+                            </option>
+                        </select>
+                        <div th:if="${vendorProfile != null}" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
+                            <span th:text="${vendorProfile.businessAddress != null ? vendorProfile.businessAddress : 'Registered Caterer'}"></span>
+                            <span th:if="${vendorProfile.serviceRadius != null}" th:text="' • Radius: ' + ${vendorProfile.serviceRadius} + ' km'"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="occasionType">Occasion / Event Type</label>
+                        <select id="occasionType" name="occasionType" class="form-control" required>
+                            <option th:each="occ : ${occasionTypes}" 
+                                    th:value="${occ.name()}" 
+                                    th:text="${occ.displayName}">
+                                Wedding / Reception
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Section 2: Service Type Selection -->
+                <h3 style="margin-top: 2rem; margin-bottom: 1.25rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                    2. Service Model &amp; Logistics
+                </h3>
+
+                <div class="form-group">
+                    <label>Choose How You Want Catering Served</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryOnly">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="serviceType" value="DELIVERY_ONLY" 
+                                       th:checked="${selectedServiceType == 'DELIVERY_ONLY' or selectedServiceType == null}" 
+                                       onchange="updateServiceTypeFields(this.value)">
+                                <strong style="color: var(--text-main);">Delivery Only</strong>
+                            </div>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">Food delivered in insulated containers. Self-serving setup.</span>
+                        </label>
+
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryServing">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="serviceType" value="DELIVERY_WITH_SERVING" 
+                                       th:checked="${selectedServiceType == 'DELIVERY_WITH_SERVING'}" 
+                                       onchange="updateServiceTypeFields(this.value)">
+                                <strong style="color: var(--text-main);">Delivery with Serving Staff</strong>
+                            </div>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">Full catering delivery + buffet equipment + professional waitstaff.</span>
+                        </label>
+
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optAtVenue">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="serviceType" value="AT_VENUE" 
+                                       th:checked="${selectedServiceType == 'AT_VENUE'}" 
+                                       onchange="updateServiceTypeFields(this.value)">
+                                <strong style="color: var(--text-main);">Ready to Dine / At Venue</strong>
+                            </div>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">Host your dinner or function directly at caterer's venue/restaurant.</span>
+                        </label>
+
+                        <label style="border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optTakeaway">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="radio" name="serviceType" value="TAKEAWAY" 
+                                       th:checked="${selectedServiceType == 'TAKEAWAY'}" 
+                                       onchange="updateServiceTypeFields(this.value)">
+                                <strong style="color: var(--text-main);">Takeaway / Self-Pickup</strong>
+                            </div>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">Trays packaged hot and ready for scheduled customer pickup.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Conditional: Delivery Address -->
+                <div class="form-group" id="deliveryAddressGroup">
+                    <label for="deliveryAddress">
+                        Event Venue / Delivery Address <span style="color: #f87171;">*</span>
+                    </label>
+                    <textarea id="deliveryAddress" name="deliveryAddress" class="form-control" rows="2" 
+                              placeholder="Full address where food/setup will be delivered"
+                              th:text="${customer.addressLine != null ? customer.addressLine + ', ' + customer.city + ' ' + (customer.pincode != null ? customer.pincode : '') : ''}"></textarea>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Prefilled from your registered address; edit if event is at another location.</span>
+                </div>
+
+                <!-- Conditional: Pickup Time Window -->
+                <div class="form-group" id="pickupTimeGroup" style="display: none;">
+                    <label for="pickupTime">
+                        Scheduled Pickup Time Window <span style="color: #f87171;">*</span>
+                    </label>
+                    <input type="text" id="pickupTime" name="pickupTime" class="form-control" 
+                           placeholder="e.g. 12:30 PM - 1:00 PM">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Please specify the time window when you will pick up your meal boxes.</span>
+                </div>
+
+                <!-- Conditional: Venue Capacity Banner -->
+                <div id="venueNoticeGroup" style="display: none; background: rgba(13, 148, 136, 0.12); border: 1px solid rgba(20, 184, 166, 0.3); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
+                    <h4 style="color: #5eead4; margin-bottom: 0.25rem;">At Venue Event Information</h4>
+                    <p style="font-size: 0.88rem; color: #ccfbf1; line-height: 1.4;">
+                        Your event will be accommodated at the caterer's banquet space:
+                        <strong th:text="${vendorProfile != null and vendorProfile.businessAddress != null ? vendorProfile.businessAddress : 'Vendor Premises'}">Vendor Address</strong>.
+                        <span th:if="${resourcePool != null and resourcePool.venueCoverCapacity > 0}">
+                            Maximum venue seated capacity: <strong th:text="${resourcePool.venueCoverCapacity} + ' seated guests'"></strong>.
+                        </span>
+                    </p>
+                </div>
+
+                <!-- Section 3: Cuisine & Service Style -->
+                <h3 style="margin-top: 2rem; margin-bottom: 1.25rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                    3. Cuisine Selection &amp; Style
+                </h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label for="cuisineSelect">Select Cuisine Package</label>
+                        <select id="cuisineSelect" name="cuisineId" class="form-control">
+                            <option value="">— Custom / Standard Catering Menu —</option>
+                            <option th:each="c : ${cuisines}" 
+                                    th:value="${c.id}" 
+                                    th:selected="${c.id == selectedCuisineId}"
+                                    th:text="${c.cuisineName} + (${c.pricePerHead != null} ? ' (₹' + ${c.pricePerHead} + '/head)' : '') + ' [' + ${c.minGuests} + '-' + ${c.maxGuests} + ' guests]'">
+                                Awadhi Feast
+                            </option>
+                        </select>
+                        <div th:if="${#lists.isEmpty(cuisines)}" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">
+                            No specialty cuisines published yet; custom event menu will be curated.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="serviceStyle">Service Presentation Style</label>
+                        <select id="serviceStyle" name="serviceStyle" class="form-control">
+                            <option th:each="style : ${serviceStyles}" 
+                                    th:value="${style.name()}" 
+                                    th:text="${style.displayName}">
+                                Buffet Style
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Section 4: Date, Time & Head Count -->
+                <h3 style="margin-top: 2rem; margin-bottom: 1.25rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                    4. Event Date, Timing &amp; Guest Count
+                </h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="eventDate">Event Date <span style="color: #e11d48;">*</span></label>
+                        <input type="date" id="eventDate" name="eventDate" class="form-control" 
+                               th:min="${minDate}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventTimeFrom">Event Start Time</label>
+                        <input type="time" id="eventTimeFrom" name="eventTimeFrom" class="form-control" value="12:00">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventTimeTo">Event End Time</label>
+                        <input type="time" id="eventTimeTo" name="eventTimeTo" class="form-control" value="16:00">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="guestCount">
+                        Number of Expected Guests <span style="color: #f87171;">*</span>
+                    </label>
+                    <input type="number" id="guestCount" name="guestCount" class="form-control" 
+                           min="1" max="2000" value="50" required oninput="calculateEstimates()">
+                    <div id="resourceEstimateBadge" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--primary-color);">
+                        Estimated resource allocation: Staff, utensils and logistics will be dynamically reserved.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="specialNotes">Special Requests, Dietary Instructions, or Theme Notes</label>
+                    <textarea id="specialNotes" name="specialNotes" class="form-control" rows="2" 
+                              placeholder="e.g. 10 Jain meals required, setup by 11:30 AM, floral table runners requested..."></textarea>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <a th:href="@{/slots}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" id="submitBookingBtn" class="btn btn-primary btn-lg" style="padding: 0.75rem 2rem;">
+                        Confirm &amp; Request Catering Booking
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const occasionsMap = {
+            'TAKEAWAY': [
+                { value: 'FAMILY_MEAL', text: 'Family Meal / Casual Gathering' },
+                { value: 'OFFICE_LUNCH', text: 'Office / Team Lunch' },
+                { value: 'BIRTHDAY', text: 'Birthday / House Party' },
+                { value: 'SOCIAL', text: 'Social Get-Together' },
+                { value: 'RELIGIOUS', text: 'Religious / Community Function' },
+                { value: 'OTHER', text: 'Other' }
+            ],
+            'AT_VENUE': [
+                { value: 'CASUAL_DINING', text: 'Casual Dining / Table Meal' },
+                { value: 'BIRTHDAY', text: 'Birthday Celebration' },
+                { value: 'ANNIVERSARY', text: 'Anniversary Celebration' },
+                { value: 'CORPORATE', text: 'Corporate Event / Dinner' },
+                { value: 'SOCIAL', text: 'Social Gathering' },
+                { value: 'WEDDING', text: 'Wedding / Reception' },
+                { value: 'OTHER', text: 'Other' }
+            ],
+            'DELIVERY_ONLY': [
+                { value: 'CORPORATE', text: 'Corporate Event' },
+                { value: 'OFFICE_LUNCH', text: 'Office / Team Lunch' },
+                { value: 'FAMILY_MEAL', text: 'Family Meal / Catering' },
+                { value: 'BIRTHDAY', text: 'Birthday Celebration' },
+                { value: 'SOCIAL', text: 'Social Gathering' },
+                { value: 'RELIGIOUS', text: 'Religious / Community Function' },
+                { value: 'CONFERENCE', text: 'Conference / Seminar' },
+                { value: 'OTHER', text: 'Other' }
+            ],
+            'DELIVERY_WITH_SERVING': [
+                { value: 'WEDDING', text: 'Wedding / Reception' },
+                { value: 'CORPORATE', text: 'Corporate Event' },
+                { value: 'CONFERENCE', text: 'Conference / Seminar' },
+                { value: 'BIRTHDAY', text: 'Birthday Celebration' },
+                { value: 'SOCIAL', text: 'Social Gathering' },
+                { value: 'RELIGIOUS', text: 'Religious / Community Function' },
+                { value: 'OTHER', text: 'Other' }
+            ]
+        };
+
+        function updateServiceTypeFields(serviceType) {
+            const deliveryGroup = document.getElementById('deliveryAddressGroup');
+            const pickupGroup = document.getElementById('pickupTimeGroup');
+            const venueGroup = document.getElementById('venueNoticeGroup');
+
+            if (serviceType === 'DELIVERY_ONLY' || serviceType === 'DELIVERY_WITH_SERVING') {
+                deliveryGroup.style.display = 'block';
+                document.getElementById('deliveryAddress').required = true;
+                pickupGroup.style.display = 'none';
+                document.getElementById('pickupTime').required = false;
+                venueGroup.style.display = 'none';
+            } else if (serviceType === 'TAKEAWAY') {
+                deliveryGroup.style.display = 'none';
+                document.getElementById('deliveryAddress').required = false;
+                pickupGroup.style.display = 'block';
+                document.getElementById('pickupTime').required = true;
+                venueGroup.style.display = 'none';
+            } else if (serviceType === 'AT_VENUE') {
+                deliveryGroup.style.display = 'none';
+                document.getElementById('deliveryAddress').required = false;
+                pickupGroup.style.display = 'none';
+                document.getElementById('pickupTime').required = false;
+                venueGroup.style.display = 'block';
+            }
+
+            // Adjust Occasion options dynamically to match selected service type
+            const occasionSelect = document.getElementById('occasionType');
+            if (occasionSelect && occasionsMap[serviceType]) {
+                const currentVal = occasionSelect.value;
+                const newOptions = occasionsMap[serviceType];
+                
+                occasionSelect.innerHTML = '';
+                let matched = false;
+                newOptions.forEach(opt => {
+                    const optionEl = document.createElement('option');
+                    optionEl.value = opt.value;
+                    optionEl.textContent = opt.text;
+                    if (opt.value === currentVal) {
+                        optionEl.selected = true;
+                        matched = true;
+                    }
+                    occasionSelect.appendChild(optionEl);
+                });
+                if (!matched && newOptions.length > 0) {
+                    occasionSelect.selectedIndex = 0;
+                }
+            }
+
+            calculateEstimates();
+        }
+
+        function calculateEstimates() {
+            const guests = parseInt(document.getElementById('guestCount').value) || 0;
+            const checkedRadio = document.querySelector('input[name="serviceType"]:checked');
+            const serviceType = checkedRadio ? checkedRadio.value : 'DELIVERY_ONLY';
+            const badge = document.getElementById('resourceEstimateBadge');
+
+            if (guests <= 0) {
+                badge.innerText = 'Please enter a valid guest count.';
+                return;
+            }
+
+            if (serviceType === 'DELIVERY_WITH_SERVING' || serviceType === 'AT_VENUE') {
+                const servers = Math.max(1, Math.ceil(guests / 15));
+                const captain = guests > 30 ? 1 : 0;
+                const kitchen = Math.max(1, Math.ceil(guests / 50));
+                const totalStaff = servers + captain + kitchen;
+                const utensils = Math.ceil(guests * 1.15);
+
+                badge.innerHTML = `<strong>Estimated Resource Reservation:</strong> 👨‍🍳 <strong>${totalStaff}</strong> Staff (${servers} servers, ${captain} captain, ${kitchen} kitchen) • 🍽️ <strong>${utensils}</strong> Utensil place sets reserved.`;
+            } else if (serviceType === 'DELIVERY_ONLY') {
+                badge.innerHTML = `<strong>Estimated Logistics:</strong> 🚚 <strong>1</strong> Insulated Delivery Vehicle dispatched • Disposable serving containers.`;
+            } else {
+                badge.innerHTML = `<strong>Takeaway Logistics:</strong> 🥡 Food packaged and staged in temperature-controlled boxes for self-pickup.`;
+            }
+        }
+
+        // Initialize estimates and fields on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkedRadio = document.querySelector('input[name="serviceType"]:checked');
+            if (checkedRadio) {
+                updateServiceTypeFields(checkedRadio.value);
+            } else {
+                calculateEstimates();
+            }
+        });
+    </script>
+</body>
+</html>

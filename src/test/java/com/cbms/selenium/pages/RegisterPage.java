@@ -18,12 +18,20 @@ public class RegisterPage extends BasePage {
     private final By nameInput = By.id("name");
     private final By emailInput = By.id("email");
     private final By passwordInput = By.id("password");
+    private final By phoneInput = By.id("phoneNumber");
+    private final By addressInput = By.id("addressLine");
+    private final By cityInput = By.id("city");
+    private final By pincodeInput = By.id("pincode");
     private final By roleSelect = By.id("role");
     private final By submitButton = By.id("registerSubmitBtn");
     private final By errorMessage = By.id("errorMessage");
     private final By nameError = By.id("nameError");
     private final By emailError = By.id("emailError");
     private final By passwordError = By.id("passwordError");
+    private final By phoneError = By.id("phoneError");
+    private final By addressError = By.id("addressError");
+    private final By cityError = By.id("cityError");
+    private final By pincodeError = By.id("pincodeError");
     private final By loginLink = By.id("loginLink");
 
     private String registrationError = null;
@@ -59,6 +67,34 @@ public class RegisterPage extends BasePage {
         return this;
     }
 
+    public RegisterPage enterPhone(String phone) {
+        WebElement elem = wait.until(ExpectedConditions.visibilityOfElementLocated(phoneInput));
+        elem.clear();
+        elem.sendKeys(phone);
+        return this;
+    }
+
+    public RegisterPage enterAddress(String address) {
+        WebElement elem = wait.until(ExpectedConditions.visibilityOfElementLocated(addressInput));
+        elem.clear();
+        elem.sendKeys(address);
+        return this;
+    }
+
+    public RegisterPage enterCity(String city) {
+        WebElement elem = wait.until(ExpectedConditions.visibilityOfElementLocated(cityInput));
+        elem.clear();
+        elem.sendKeys(city);
+        return this;
+    }
+
+    public RegisterPage enterPincode(String pincode) {
+        WebElement elem = wait.until(ExpectedConditions.visibilityOfElementLocated(pincodeInput));
+        elem.clear();
+        elem.sendKeys(pincode);
+        return this;
+    }
+
     public RegisterPage selectRole(String role) {
         WebElement selectElem = wait.until(ExpectedConditions.visibilityOfElementLocated(roleSelect));
         Select select = new Select(selectElem);
@@ -67,9 +103,18 @@ public class RegisterPage extends BasePage {
     }
 
     public LoginPage registerUser(String name, String email, String password, String role) {
+        return registerUser(name, email, password, role, "9876543210", "42 MG Road", "Mumbai", "400001");
+    }
+
+    public LoginPage registerUser(String name, String email, String password, String role,
+                                 String phone, String address, String city, String pincode) {
         enterName(name);
         enterEmail(email);
         enterPassword(password);
+        enterPhone(phone);
+        enterAddress(address);
+        enterCity(city);
+        enterPincode(pincode);
         if (role != null) {
             selectRole(role);
         }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users - Smart Catering Services Admin</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v='3.0')}">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
@@ -30,7 +30,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Email</th>
+                        <th>Email &amp; Contact</th>
+                        <th>Location / Org</th>
                         <th>Role</th>
                         <th>Account Status</th>
                         <th>Action</th>
@@ -39,8 +40,19 @@
                 <tbody>
                     <tr th:each="user : ${users}">
                         <td th:text="${user.id}"></td>
-                        <td style="font-weight: 600;" th:text="${user.name}"></td>
-                        <td th:text="${user.email}"></td>
+                        <td>
+                            <div style="font-weight: 600;" th:text="${user.name}"></div>
+                            <div th:if="${user.organizationName}" style="font-size: 0.8rem; color: var(--text-muted);" th:text="${user.organizationName}"></div>
+                        </td>
+                        <td>
+                            <div th:text="${user.email}"></div>
+                            <div th:if="${user.phoneNumber}" style="font-size: 0.85rem; color: var(--primary-color);" th:text="'📞 ' + ${user.phoneNumber}"></div>
+                        </td>
+                        <td>
+                            <div th:if="${user.city}" th:text="${user.city} + (${user.pincode != null} ? ' (' + ${user.pincode} + ')' : '')"></div>
+                            <div th:if="${user.addressLine}" style="font-size: 0.8rem; color: var(--text-muted);" th:text="${user.addressLine}"></div>
+                            <span th:if="${user.city == null and user.addressLine == null}" style="color: var(--text-muted); font-style: italic;">—</span>
+                        </td>
                         <td>
                             <span class="role-badge"
                                   th:classappend="${user.role.name() == 'ADMIN' ? 'badge-admin' : (user.role.name() == 'VENDOR' ? 'badge-vendor' : 'badge-customer')}"
@@ -73,15 +85,11 @@
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(users)}">
-                        <td colspan="6" class="empty-row">No users registered in the system.</td>
+                        <td colspan="7" class="empty-row">No users registered in the system.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
-    </footer>
 </body>
 </html>

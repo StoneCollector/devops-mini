@@ -1,10 +1,22 @@
 package com.cbms.config;
 
+import com.cbms.model.BookingStatus;
+import com.cbms.model.CateringEvent;
 import com.cbms.model.CateringSlot;
+import com.cbms.model.OccasionType;
 import com.cbms.model.Role;
+import com.cbms.model.ServiceStyle;
+import com.cbms.model.ServiceType;
 import com.cbms.model.User;
+import com.cbms.model.VendorCuisine;
+import com.cbms.model.VendorProfile;
+import com.cbms.model.VendorResourcePool;
+import com.cbms.repository.CateringEventRepository;
 import com.cbms.repository.CateringSlotRepository;
 import com.cbms.repository.UserRepository;
+import com.cbms.repository.VendorCuisineRepository;
+import com.cbms.repository.VendorProfileRepository;
+import com.cbms.repository.VendorResourcePoolRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -17,13 +29,25 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final CateringSlotRepository cateringSlotRepository;
+    private final VendorProfileRepository vendorProfileRepository;
+    private final VendorResourcePoolRepository resourcePoolRepository;
+    private final VendorCuisineRepository cuisineRepository;
+    private final CateringEventRepository eventRepository;
     private final JdbcTemplate jdbcTemplate;
 
     public DataInitializer(UserRepository userRepository, 
                            CateringSlotRepository cateringSlotRepository, 
+                           VendorProfileRepository vendorProfileRepository,
+                           VendorResourcePoolRepository resourcePoolRepository,
+                           VendorCuisineRepository cuisineRepository,
+                           CateringEventRepository eventRepository,
                            JdbcTemplate jdbcTemplate) {
         this.userRepository = userRepository;
         this.cateringSlotRepository = cateringSlotRepository;
+        this.vendorProfileRepository = vendorProfileRepository;
+        this.resourcePoolRepository = resourcePoolRepository;
+        this.cuisineRepository = cuisineRepository;
+        this.eventRepository = eventRepository;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -40,43 +64,270 @@ public class DataInitializer implements CommandLineRunner {
         } catch (Exception ignored) {
         }
 
-        // 1. Ensure all existing users have active = true
-        List<User> allUsers = userRepository.findAll();
-        for (User user : allUsers) {
-            if (!user.isActive()) {
-                user.setActive(true);
-                userRepository.save(user);
-            }
-        }
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN opening_time TIME DEFAULT '08:00:00'");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN closing_time TIME DEFAULT '23:59:00'");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN takeaway_enabled BOOLEAN DEFAULT TRUE");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN ready_to_dine_enabled BOOLEAN DEFAULT TRUE");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN ready_to_dine_start_time TIME DEFAULT '11:00:00'");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN ready_to_dine_end_time TIME DEFAULT '23:00:00'");
+        } catch (Exception ignored) {}
 
-        // 2. Ensure Admin seeded account exists
+        try {
+            jdbcTemplate.execute("UPDATE vendor_profiles SET takeaway_enabled = 1 WHERE takeaway_enabled IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET ready_to_dine_enabled = 1 WHERE ready_to_dine_enabled IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET opening_time = '08:00:00' WHERE opening_time IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET closing_time = '23:59:00' WHERE closing_time IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET ready_to_dine_start_time = '11:00:00' WHERE ready_to_dine_start_time IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET ready_to_dine_end_time = '23:00:00' WHERE ready_to_dine_end_time IS NULL");
+        } catch (Exception ignored) {}
+
+        // 1. Ensure Admin seeded account exists with contact details
         User admin = userRepository.findByEmail("admin@smartcatering.com")
                 .orElseGet(() -> {
                     User u = new User("System Admin", "admin@smartcatering.com", "admin123", Role.ADMIN, true);
                     return userRepository.save(u);
                 });
         admin.setActive(true);
+        if (admin.getPhoneNumber() == null) admin.setPhoneNumber("9876543200");
+        if (admin.getAddressLine() == null) admin.setAddressLine("Admin Operations Center, Level 5");
+        if (admin.getCity() == null) admin.setCity("Mumbai");
+        if (admin.getPincode() == null) admin.setPincode("400001");
         userRepository.save(admin);
 
-        // 3. Ensure Vendor seeded account exists
+        // 2. Ensure Vendor seeded account exists with contact details
         User vendor = userRepository.findByEmail("chef.mario@smartcatering.com")
                 .orElseGet(() -> {
                     User u = new User("Chef Mario Catering", "chef.mario@smartcatering.com", "vendor123", Role.VENDOR, true);
                     return userRepository.save(u);
                 });
         vendor.setActive(true);
+        if (vendor.getPhoneNumber() == null) vendor.setPhoneNumber("9876543201");
+        if (vendor.getAddressLine() == null) vendor.setAddressLine("Plot 14, Kitchen Industrial Zone, Andheri West");
+        if (vendor.getCity() == null) vendor.setCity("Mumbai");
+        if (vendor.getPincode() == null) vendor.setPincode("400053");
+        if (vendor.getOrganizationName() == null) vendor.setOrganizationName("Mario Culinary Group Ltd.");
         userRepository.save(vendor);
 
-        // 4. Ensure Customer seeded account exists
+        // 3. Ensure Customer seeded account exists with contact details
         User customer = userRepository.findByEmail("customer@example.com")
                 .orElseGet(() -> {
                     User u = new User("John Doe", "customer@example.com", "customer123", Role.CUSTOMER, true);
                     return userRepository.save(u);
                 });
         customer.setActive(true);
+        if (customer.getPhoneNumber() == null) customer.setPhoneNumber("9876543202");
+        if (customer.getAddressLine() == null) customer.setAddressLine("42 Marine Lines, Bayview Towers, Apt 7B");
+        if (customer.getCity() == null) customer.setCity("Mumbai");
+        if (customer.getPincode() == null) customer.setPincode("400020");
+        if (customer.getOrganizationName() == null) customer.setOrganizationName("Acme Global Solutions");
         userRepository.save(customer);
 
-        // 5. Ensure existing slots without vendor are assigned to the seeded vendor
+        // 4. Seed VendorProfile for Chef Mario (Open 08:00 to 23:59, Takeaway: YES, Ready to Dine: YES)
+        VendorProfile vp = vendorProfileRepository.findByVendor(vendor)
+                .orElseGet(() -> new VendorProfile(
+                        vendor,
+                        "Chef Mario Grand Catering & Banquets",
+                        "9876543201",
+                        "Plot 14, Kitchen Industrial Zone, Andheri West, Mumbai"
+                ));
+        vp.setServiceRadius(35);
+        vp.setAdvanceBookingDays(2);
+        vp.setFssaiLicenseNo("FSSAI-11521000123456");
+        vp.setOpeningTime(java.time.LocalTime.of(8, 0));
+        vp.setClosingTime(java.time.LocalTime.of(23, 59));
+        vp.setTakeawayEnabled(true);
+        vp.setReadyToDineEnabled(true);
+        vp.setReadyToDineStartTime(java.time.LocalTime.of(11, 0));
+        vp.setReadyToDineEndTime(java.time.LocalTime.of(23, 0));
+        vendorProfileRepository.save(vp);
+
+        // 4b. Seed Vendor 2: Urban Spice Kitchen (Open 09:00 to 23:30, Takeaway: YES, Ready to Dine: NO)
+        User vendor2 = userRepository.findByEmail("urban.spice@smartcatering.com")
+                .orElseGet(() -> {
+                    User u = new User("Urban Spice Express", "urban.spice@smartcatering.com", "vendor123", Role.VENDOR, true);
+                    return userRepository.save(u);
+                });
+        vendor2.setActive(true);
+        if (vendor2.getPhoneNumber() == null) vendor2.setPhoneNumber("9876543205");
+        if (vendor2.getAddressLine() == null) vendor2.setAddressLine("Shop 12, Food Street, Bandra West");
+        if (vendor2.getCity() == null) vendor2.setCity("Mumbai");
+        if (vendor2.getPincode() == null) vendor2.setPincode("400050");
+        userRepository.save(vendor2);
+
+        VendorProfile vpSpice = vendorProfileRepository.findByVendor(vendor2)
+                .orElseGet(() -> new VendorProfile(
+                        vendor2,
+                        "Urban Spice Kitchen & Takeaway",
+                        "9876543205",
+                        "Shop 12, Food Street, Bandra West, Mumbai"
+                ));
+        vpSpice.setOpeningTime(java.time.LocalTime.of(9, 0));
+        vpSpice.setClosingTime(java.time.LocalTime.of(23, 30));
+        vpSpice.setTakeawayEnabled(true);
+        vpSpice.setReadyToDineEnabled(false); // Vendor chose NOT to keep ready to dine! Takeaway only!
+        vendorProfileRepository.save(vpSpice);
+
+        if (cuisineRepository.findByVendorOrderByCuisineNameAsc(vendor2).isEmpty()) {
+            VendorCuisine cSpice1 = new VendorCuisine(
+                    vendor2, "North Indian Dum Curries", "TAKEAWAY_BOX", 350.0, 1, 100, "HALAL",
+                    "Authentic Butter Chicken, Dal Makhani, Paneer Tikka Masala, and Tandoori Naan combos."
+            );
+            VendorCuisine cSpice2 = new VendorCuisine(
+                    vendor2, "Mumbai Street Food Box", "BOX_MEAL", 220.0, 1, 150, "VEGETARIAN",
+                    "Crispy Pav Bhaji, Sev Puri, Dahi Batata Puri, and freshly pressed cutting chai."
+            );
+            cuisineRepository.save(cSpice1);
+            cuisineRepository.save(cSpice2);
+        }
+
+        // 4c. Seed Vendor 3: Sunrise Breakfast (Open 06:00 to 14:00 - CLOSED before current evening time!)
+        User vendor3 = userRepository.findByEmail("morning.brunch@smartcatering.com")
+                .orElseGet(() -> {
+                    User u = new User("Sunrise Bakery & Brunch", "morning.brunch@smartcatering.com", "vendor123", Role.VENDOR, true);
+                    return userRepository.save(u);
+                });
+        vendor3.setActive(true);
+        if (vendor3.getPhoneNumber() == null) vendor3.setPhoneNumber("9876543206");
+        if (vendor3.getAddressLine() == null) vendor3.setAddressLine("18 Heritage Arcade, Colaba Causeway");
+        if (vendor3.getCity() == null) vendor3.setCity("Mumbai");
+        if (vendor3.getPincode() == null) vendor3.setPincode("400005");
+        userRepository.save(vendor3);
+
+        VendorProfile vpBrunch = vendorProfileRepository.findByVendor(vendor3)
+                .orElseGet(() -> new VendorProfile(
+                        vendor3,
+                        "Sunrise Breakfast & Artisan Brunch",
+                        "9876543206",
+                        "18 Heritage Arcade, Colaba Causeway, Mumbai"
+                ));
+        vpBrunch.setOpeningTime(java.time.LocalTime.of(6, 0));
+        vpBrunch.setClosingTime(java.time.LocalTime.of(14, 0)); // Closed at 2 PM! Open before current time!
+        vpBrunch.setTakeawayEnabled(true);
+        vpBrunch.setReadyToDineEnabled(true);
+        vpBrunch.setReadyToDineStartTime(java.time.LocalTime.of(7, 0));
+        vpBrunch.setReadyToDineEndTime(java.time.LocalTime.of(13, 30));
+        vendorProfileRepository.save(vpBrunch);
+
+        if (cuisineRepository.findByVendorOrderByCuisineNameAsc(vendor3).isEmpty()) {
+            VendorCuisine cBrunch = new VendorCuisine(
+                    vendor3, "Artisan Morning Bakery Basket", "PLATED", 280.0, 1, 50, "VEGETARIAN",
+                    "Freshly baked sourdough croissants, brioche buns, eggs florentine, and pour-over coffee."
+            );
+            cuisineRepository.save(cBrunch);
+        }
+
+        // 5. Seed VendorResourcePool for Chef Mario (15 staff, 200 utensils, 4 vehicles, 120 venue covers)
+        if (resourcePoolRepository.findByVendor(vendor).isEmpty()) {
+            VendorResourcePool pool = new VendorResourcePool(vendor, 15, 200, 4, 120);
+            resourcePoolRepository.save(pool);
+        }
+
+        // 6. Seed VendorCuisines for Chef Mario
+        List<VendorCuisine> existingCuisines = cuisineRepository.findByVendorOrderByCuisineNameAsc(vendor);
+        if (existingCuisines.isEmpty()) {
+            VendorCuisine c1 = new VendorCuisine(
+                    vendor,
+                    "Royal Awadhi & Mughlai Feast",
+                    "BUFFET,PLATED",
+                    750.0,
+                    20,
+                    400,
+                    "HALAL",
+                    "Signature Dum Biryani, Galouti Kebabs, Sheermal, Paneer Tikka, Shahi Tukda & Rose Phirni."
+            );
+            VendorCuisine c2 = new VendorCuisine(
+                    vendor,
+                    "Traditional South Indian Sadya",
+                    "BUFFET,FAMILY_STYLE",
+                    450.0,
+                    25,
+                    500,
+                    "VEGETARIAN,JAIN",
+                    "Authentic Kerala Sadya served with 16 varieties including Avial, Thoran, Kalan, Sambar, Payasam & Appam."
+            );
+            VendorCuisine c3 = new VendorCuisine(
+                    vendor,
+                    "Continental Corporate Banquet",
+                    "BUFFET,LIVE_STATION",
+                    850.0,
+                    15,
+                    300,
+                    "GLUTEN_FREE",
+                    "Live artisanal pasta counter, herb-roasted grilled cuts, quinoa harvest salads, artisan focaccia, and classic Tiramisu."
+            );
+            cuisineRepository.save(c1);
+            cuisineRepository.save(c2);
+            cuisineRepository.save(c3);
+            existingCuisines = List.of(c1, c2, c3);
+        }
+
+        // 7. Seed sample CateringEvents demonstrating v2 service models
+        List<CateringEvent> existingEvents = eventRepository.findByVendorOrderByEventDateDescCreatedAtDesc(vendor);
+        if (existingEvents.isEmpty()) {
+            LocalDate sampleDate1 = LocalDate.now().plusDays(3);
+            LocalDate sampleDate2 = LocalDate.now().plusDays(5);
+
+            // Event 1: Delivery with Serving
+            CateringEvent ev1 = new CateringEvent(
+                    customer,
+                    vendor,
+                    existingCuisines.get(0),
+                    OccasionType.CORPORATE,
+                    ServiceType.DELIVERY_WITH_SERVING,
+                    ServiceStyle.BUFFET,
+                    sampleDate1,
+                    "12:30",
+                    "15:30",
+                    60,
+                    "Setup buffet line in boardroom 4B by 11:45 AM. 10 Jain requests.",
+                    "Acme Global HQ, Tech Park C, Powai, Mumbai",
+                    null
+            );
+            // 60 guests: servers = ceil(60/15) = 4, captain = 1 (since 60 > 30), kitchen = ceil(60/50) = 2 => staff = 7
+            ev1.setStaffConsumed(7);
+            ev1.setUtensilsConsumed((int) Math.ceil(60 * 1.15)); // 69
+            ev1.setVehicleConsumed(1);
+            ev1.setVenueCoversConsumed(0);
+            ev1.setStatus(BookingStatus.CONFIRMED);
+            eventRepository.save(ev1);
+
+            // Event 2: At Venue Wedding Reception
+            CateringEvent ev2 = new CateringEvent(
+                    customer,
+                    vendor,
+                    existingCuisines.get(1),
+                    OccasionType.WEDDING,
+                    ServiceType.AT_VENUE,
+                    ServiceStyle.FAMILY_STYLE,
+                    sampleDate2,
+                    "18:00",
+                    "22:30",
+                    80,
+                    "Mandap decor setup by 4:00 PM. Jasmine floral runners on all dining tables.",
+                    null,
+                    null
+            );
+            // 80 guests: servers = ceil(80/15) = 6, captain = 1, kitchen = ceil(80/50) = 2 => staff = 9
+            ev2.setStaffConsumed(9);
+            ev2.setUtensilsConsumed((int) Math.ceil(80 * 1.15)); // 92
+            ev2.setVehicleConsumed(0);
+            ev2.setVenueCoversConsumed(80);
+            ev2.setStatus(BookingStatus.PENDING);
+            eventRepository.save(ev2);
+        }
+
+        // 8. Ensure existing slots without vendor are assigned to the seeded vendor
         List<CateringSlot> existingSlots = cateringSlotRepository.findAll();
         for (CateringSlot slot : existingSlots) {
             if (slot.getVendor() == null) {
@@ -85,7 +336,7 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 6. Ensure at least one upcoming seeded slot with available capacity exists
+        // 9. Ensure at least one upcoming seeded slot with available capacity exists
         LocalDate today = LocalDate.now();
         CateringSlot seededSlot = existingSlots.stream()
                 .filter(s -> !s.getDate().isBefore(today) && "Standard Buffet".equals(s.getMenuType()))

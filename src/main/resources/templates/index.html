@@ -1,11 +1,241 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=/slots">
-    <title>Smart Catering Services</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catering &amp; Takeaway Kitchens - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='3.0')}">
 </head>
+
 <body>
-    <p>Redirecting to <a th:href="@{/slots}">Smart Catering Services</a>...</p>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <!-- Hero Banner with Live Operational Clock -->
+        <section class="hero-banner">
+            <div class="hero-content">
+                <div class="hero-timestamp">
+                    <span class="hero-time-text" th:text="${#temporals.format(currentTime, 'hh:mm a')}">10:49 PM</span>
+                    <span class="hero-divider">&bull;</span>
+                    <span th:text="${#temporals.format(currentDate, 'EEEE, MMMM d, yyyy')}">Wednesday, October 14, 2026</span>
+                    <span class="hero-divider">&bull;</span>
+                    <span style="color: #34d399; font-weight: 600;">Kitchens accepting orders</span>
+                </div>
+
+                <h1 class="hero-headline">Handcrafted Catering &amp; Fresh Takeaway</h1>
+                <p class="hero-subhead">
+                    Browse verified professional kitchens currently preparing hot orders for instant takeaway
+                    collection, dine-in tables, or reserve full-service catering for your upcoming events.
+                </p>
+            </div>
+
+            <div class="hero-concierge-card">
+                <div class="concierge-title">Hosting an Event or Banquet?</div>
+                <p class="concierge-desc">Custom multi-course menus, on-site serving staff, and equipment setup for
+                    weddings &amp; corporate gatherings.</p>
+                <a th:href="@{/events/book}" id="heroCateringBtn" class="btn btn-accent btn-sm"
+                    style="font-weight: 700; width: 100%;">
+                    Book Event Catering &rarr;
+                </a>
+            </div>
+        </section>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="filter-card">
+            <form th:action="@{/}" method="get"
+                style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+                <!-- Service Type Quick Tabs -->
+                <div class="filter-pills">
+                    <a th:href="@{/(filter='all', q=${searchQuery})}" class="pill-filter" id="filterAll"
+                        th:classappend="${activeFilter == 'all' or activeFilter == null} ? 'active' : ''">
+                        All Open Kitchens
+                    </a>
+
+                    <a th:href="@{/(filter='takeaway', q=${searchQuery})}" class="pill-filter" id="filterTakeaway"
+                        th:classappend="${activeFilter == 'takeaway'} ? 'active' : ''">
+                        Takeaway Ready
+                    </a>
+
+                    <a th:href="@{/(filter='dinein', q=${searchQuery})}" class="pill-filter" id="filterDineIn"
+                        th:classappend="${activeFilter == 'dinein'} ? 'active' : ''">
+                        Ready to Dine
+                    </a>
+                </div>
+
+                <!-- Keyword Search -->
+                <div style="display: flex; gap: 0.5rem; flex: 1; max-width: 440px; min-width: 260px;">
+                    <input type="hidden" name="filter" th:value="${activeFilter}">
+                    <input type="text" name="q" class="form-control"
+                        placeholder="Search by kitchen, cuisine, or specialty..." th:value="${searchQuery}"
+                        style="font-size: 0.88rem;">
+                    <button type="submit" id="searchBtn" class="btn btn-secondary btn-sm"
+                        style="font-weight: 700; white-space: nowrap;">
+                        Search
+                    </button>
+                    <a th:if="${searchQuery != null and !searchQuery.isEmpty()}" th:href="@{/(filter=${activeFilter})}"
+                        class="btn btn-outline-dark btn-sm">Clear</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Vendor Count Headline -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+            <h2 style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin: 0;">
+                <span th:text="${vendors.size()}">2</span> Kitchens Open Right Now
+            </h2>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">
+                Browse freely as a guest &bull; Sign in only to confirm order
+            </span>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${vendors.isEmpty()}"
+            style="text-align: center; padding: 4rem 2rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed rgba(255, 255, 255, 0.15); margin-bottom: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.8;">🌙</div>
+            <h3 style="font-size: 1.35rem; color: #ffffff; margin-bottom: 0.5rem;">No Kitchens Open Matching Your Filter
+            </h3>
+            <p style="color: var(--text-muted); max-width: 520px; margin: 0 auto 1.5rem auto; line-height: 1.5;">
+                Operating hours for some caterers may have ended for today. Try adjusting your service filters or browse
+                again during standard operating hours.
+            </p>
+            <a th:href="@{/}" class="btn btn-primary">Reset Filters</a>
+        </div>
+
+        <!-- Landscape Kitchen Listing Cards -->
+        <div class="kitchen-listing-feed">
+            <div th:each="v : ${vendors}" class="kitchen-card">
+
+                <!-- Column 1: Identity, Hours, Service Badges & Logistics -->
+                <div class="kitchen-col-info">
+                    <div class="kitchen-header-meta">
+                        <h3 class="kitchen-title" th:text="${v.profile.businessName}">Chef Mario Grand Catering &amp;
+                            Banquets</h3>
+                        <div th:if="${v.vendor.name != null and !#strings.equalsIgnoreCase(v.vendor.name, v.profile.businessName)}"
+                            class="kitchen-subtitle" th:text="'Managed by ' + ${v.vendor.name}">
+                            Managed by Mario Rossi
+                        </div>
+                    </div>
+
+                    <!-- Subtle, typography-led open status -->
+                    <div class="kitchen-status-line">
+                        <span class="pulse-dot"></span>
+                        <span class="status-open-text">Open now</span>
+                        <span class="status-closing-text" th:text="'&bull; Closes ' + ${v.formattedClosingTime}">&bull;
+                            Closes 11:59 PM</span>
+                    </div>
+
+                    <!-- Service Badges -->
+                    <div class="service-capsules">
+                        <span th:if="${v.takeawayActive}" class="service-pill pill-takeaway">
+                            Takeaway Ready
+                        </span>
+
+                        <th:block th:if="${v.profile.readyToDineEnabled}">
+                            <span th:if="${v.readyToDineActive}" class="service-pill pill-dinein">
+                                Dine-in (<span th:text="${v.formattedDineInHours}">11:00 AM – 11:00 PM</span>)
+                            </span>
+                            <span th:if="${!v.readyToDineActive}" class="service-pill pill-closed">
+                                Dine-in Closed (<span th:text="${v.formattedDineInHours}">Opens 11:00 AM</span>)
+                            </span>
+                        </th:block>
+
+                        <span th:if="${!v.profile.readyToDineEnabled}" class="service-pill pill-closed">
+                            Takeaway Only
+                        </span>
+                    </div>
+
+                    <!-- Logistics Info -->
+                    <div class="kitchen-logistics">
+                        <div class="logistic-row">
+                            <span class="logistic-icon">&#128205;</span>
+                            <span
+                                th:text="${v.profile.businessAddress != null ? v.profile.businessAddress : v.vendor.addressLine}">Plot
+                                14, Kitchen Industrial Zone</span>
+                        </div>
+                        <div class="logistic-row">
+                            <span class="logistic-icon">&#128222;</span>
+                            <span
+                                th:text="${v.profile.businessPhone != null ? v.profile.businessPhone : v.vendor.phoneNumber}">9876543201</span>
+                        </div>
+                        <div class="logistic-row"
+                            style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.15rem;">
+                            <span
+                                th:text="${v.profile.serviceRadius} + ' km radius' + (${v.profile.advanceBookingDays == 0 ? ' &bull; Same-day orders' : ' &bull; ' + v.profile.advanceBookingDays + ' days notice'})">35
+                                km radius &bull; Same-day orders</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Live Menus Showcase (Wide horizontal grid) -->
+                <div class="kitchen-col-menus">
+                    <div class="menus-heading">Featured Menus &amp; Dishes</div>
+
+                    <div th:if="${v.cuisines.isEmpty()}" class="empty-menu-notice">
+                        Custom multi-course menu planning available on direct booking.
+                    </div>
+
+                    <div th:if="${!v.cuisines.isEmpty()}" class="menus-grid">
+                        <div th:each="c : ${v.cuisines}" class="menu-card-compact">
+                            <div>
+                                <div class="menu-dish-name" th:text="${c.cuisineName}">Mughlai Feast</div>
+                                <span class="menu-dietary-chip" th:text="${c.dietaryFlags}">HALAL</span>
+                            </div>
+                            <div class="menu-price">
+                                &#8377;<span th:text="${#numbers.formatDecimal(c.pricePerHead, 1, 0)}">750</span>
+                                <span class="price-sub">/ person</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Direct Actions & Booking -->
+                <div class="kitchen-col-actions">
+                    <!-- Dine-in Action -->
+                    <a th:if="${v.readyToDineActive}"
+                        th:href="@{/events/book(vendorId=${v.vendor.id}, serviceType='AT_VENUE')}"
+                        class="btn btn-primary btn-kitchen-action" th:id="'bookDineBtn-' + ${v.vendor.id}">
+                        Reserve Dine-In
+                    </a>
+                    <span th:if="${v.profile.readyToDineEnabled and !v.readyToDineActive}"
+                        class="btn btn-secondary btn-kitchen-action"
+                        style="opacity: 0.6; cursor: not-allowed; font-size: 0.82rem;">
+                        Dine-in Closed
+                    </span>
+
+                    <!-- Takeaway Action -->
+                    <a th:if="${v.takeawayActive}"
+                        th:href="@{/events/book(vendorId=${v.vendor.id}, serviceType='TAKEAWAY')}"
+                        class="btn btn-secondary btn-kitchen-action" th:id="'orderTakeawayBtn-' + ${v.vendor.id}">
+                        Order Takeaway
+                    </a>
+
+                    <!-- Full Event Catering Service -->
+                    <a th:href="@{/events/book(vendorId=${v.vendor.id})}" class="btn-catering-secondary"
+                        th:id="'fullCateringBtn-' + ${v.vendor.id}">
+                        Book Full Catering &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Callout for Guests -->
+        <div class="guest-callout-card">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <span style="font-size: 1.5rem; opacity: 0.85;">💡</span>
+                <div>
+                    <strong style="color: #ffffff; font-size: 0.95rem; display: block;">Browsing as a Guest?</strong>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Explore caterers, menus, and operating hours freely.</span>
+                </div>
+            </div>
+            <div class="guest-auth-text">
+                Make your bookings and manage them now, 
+                <a th:href="@{/register}" id="guestSignUpLink" class="guest-auth-link">sign up</a> 
+                or 
+                <a th:href="@{/login}" id="guestLogInLink" class="guest-auth-link">log in</a>
+            </div>
+        </div>
+    </main>
 </body>
+
 </html>

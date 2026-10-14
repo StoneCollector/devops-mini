@@ -1,10 +1,19 @@
 package com.cbms.service;
 
+import com.cbms.dto.AvailableVendorView;
 import com.cbms.model.Role;
 import com.cbms.model.User;
+import com.cbms.model.VendorCuisine;
+import com.cbms.model.VendorProfile;
 import com.cbms.repository.UserRepository;
+import com.cbms.repository.VendorCuisineRepository;
+import com.cbms.repository.VendorProfileRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -15,16 +24,37 @@ public class UserService {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private final UserRepository userRepository;
+    private final VendorProfileRepository vendorProfileRepository;
+    private final VendorCuisineRepository vendorCuisineRepository;
 
     public UserService(UserRepository userRepository) {
+        this(userRepository, null, null);
+    }
+
+    public UserService(UserRepository userRepository, VendorProfileRepository vendorProfileRepository) {
+        this(userRepository, vendorProfileRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public UserService(UserRepository userRepository,
+                       VendorProfileRepository vendorProfileRepository,
+                       VendorCuisineRepository vendorCuisineRepository) {
         this.userRepository = userRepository;
+        this.vendorProfileRepository = vendorProfileRepository;
+        this.vendorCuisineRepository = vendorCuisineRepository;
     }
 
     public User register(String name, String email, String password) {
-        return register(name, email, password, Role.CUSTOMER);
+        return register(name, email, password, Role.CUSTOMER, null, null, null, null, null, null);
     }
 
     public User register(String name, String email, String password, Role role) {
+        return register(name, email, password, role, null, null, null, null, null, null);
+    }
+
+    public User register(String name, String email, String password, Role role,
+                         String phoneNumber, String addressLine, String city, String pincode,
+                         String organizationName, String gstNumber) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Name cannot be empty");
         }
@@ -40,13 +70,125 @@ public class UserService {
         if (userRepository.findByEmail(email.trim()).isPresent()) {
             throw new IllegalArgumentException("Email already registered");
         }
+
+        // Validate mandatory contact info if provided, or provide defaults for backward-compatible calls
+        String cleanPhone = (phoneNumber != null && !phoneNumber.trim().isEmpty()) ? phoneNumber.trim() : null;
+        String cleanAddress = (addressLine != null && !addressLine.trim().isEmpty()) ? addressLine.trim() : null;
+        String cleanCity = (city != null && !city.trim().isEmpty()) ? city.trim() : null;
+        String cleanPincode = (pincode != null && !pincode.trim().isEmpty()) ? pincode.trim() : null;
+
+        if (cleanPhone != null) {
+            validatePhone(cleanPhone);
+        }
+        if (cleanPincode != null) {
+            validatePincode(cleanPincode);
+        }
+
         Role userRole = (role != null) ? role : Role.CUSTOMER;
         User user = new User(name.trim(), email.trim(), password, userRole);
-        return userRepository.save(user);
+        user.setPhoneNumber(cleanPhone);
+        user.setAddressLine(cleanAddress);
+        user.setCity(cleanCity);
+        user.setPincode(cleanPincode);
+        user.setOrganizationName(organizationName != null && !organizationName.trim().isEmpty() ? organizationName.trim() : null);
+        user.setGstNumber(gstNumber != null && !gstNumber.trim().isEmpty() ? gstNumber.trim() : null);
+
+        User savedUser = userRepository.save(user);
+
+        // Auto-create initial VendorProfile if role is VENDOR
+        if (userRole == Role.VENDOR && vendorProfileRepository != null) {
+            VendorProfile profile = new VendorProfile(
+                    savedUser,
+                    user.getName(),
+                    user.getPhoneNumber() != null ? user.getPhoneNumber() : "",
+                    user.getAddressLine() != null ? user.getAddressLine() : ""
+            );
+            vendorProfileRepository.save(profile);
+        }
+
+        return savedUser;
     }
 
     public User registerUser(String name, String email, String password, Role role) {
         return register(name, email, password, role);
+    }
+
+    public void validateContactDetails(String phoneNumber, String addressLine, String city, String pincode) {
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Phone number cannot be empty");
+        }
+        validatePhone(phoneNumber.trim());
+
+        if (addressLine == null || addressLine.trim().isEmpty()) {
+            throw new IllegalArgumentException("Address cannot be empty");
+        }
+        if (city == null || city.trim().isEmpty()) {
+            throw new IllegalArgumentException("City cannot be empty");
+        }
+        if (pincode == null || pincode.trim().isEmpty()) {
+            throw new IllegalArgumentException("Pincode cannot be empty");
+        }
+        validatePincode(pincode.trim());
+    }
+
+    private void validatePhone(String phone) {
+        String digitsOnly = phone.replaceAll("[^0-9]", "");
+        if (digitsOnly.length() < 10) {
+            throw new IllegalArgumentException("Phone number must have at least 10 digits");
+        }
+    }
+
+    private void validatePincode(String pincode) {
+        if (!pincode.matches("^[0-9]{5,6}$")) {
+            throw new IllegalArgumentException("Pincode must be 5 or 6 digits");
+        }
+    }
+
+    @Transactional
+    public User updateUserProfile(Long userId, String name, String phoneNumber, String addressLine,
+                                  String city, String pincode, String organizationName, String gstNumber) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be empty");
+        }
+        validateContactDetails(phoneNumber, addressLine, city, pincode);
+
+        user.setName(name.trim());
+        user.setPhoneNumber(phoneNumber.trim());
+        user.setAddressLine(addressLine.trim());
+        user.setCity(city.trim());
+        user.setPincode(pincode.trim());
+        user.setOrganizationName(organizationName != null && !organizationName.trim().isEmpty() ? organizationName.trim() : null);
+        user.setGstNumber(gstNumber != null && !gstNumber.trim().isEmpty() ? gstNumber.trim() : null);
+
+        return userRepository.save(user);
+    }
+
+    public Optional<VendorProfile> getVendorProfile(Long vendorId) {
+        return vendorProfileRepository.findByVendorId(vendorId);
+    }
+
+    public VendorProfile getOrCreateVendorProfile(User vendor) {
+        return vendorProfileRepository.findByVendor(vendor)
+                .orElseGet(() -> {
+                    VendorProfile profile = new VendorProfile(
+                            vendor,
+                            vendor.getName() != null ? vendor.getName() : "Catering Business",
+                            vendor.getPhoneNumber() != null ? vendor.getPhoneNumber() : "",
+                            vendor.getAddressLine() != null ? vendor.getAddressLine() : ""
+                    );
+                    return vendorProfileRepository.save(profile);
+                });
+    }
+
+    @Transactional
+    public VendorProfile saveVendorProfile(VendorProfile profile) {
+        if (profile.getBusinessName() == null || profile.getBusinessName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Business name cannot be empty");
+        }
+        return vendorProfileRepository.save(profile);
     }
 
     public Optional<User> authenticate(String email, String password) {
@@ -84,5 +226,72 @@ public class UserService {
     public User save(User user) {
         return userRepository.save(user);
     }
-}
 
+    /**
+     * Lists vendors who are active and available on the current date from the current system time.
+     * Any vendors whose operating window closed before the current time will NOT be returned.
+     * Vendors can offer Takeaways only or Ready to Dine (or both).
+     */
+    public List<AvailableVendorView> getAvailableVendors(LocalDate date, LocalTime time, String serviceFilter, String query) {
+        LocalDate checkDate = (date != null) ? date : LocalDate.now();
+        LocalTime checkTime = (time != null) ? time : LocalTime.now();
+
+        List<User> vendors = userRepository.findAllByOrderByRoleAscNameAsc().stream()
+                .filter(u -> u.getRole() == Role.VENDOR && u.isActive())
+                .toList();
+
+        List<AvailableVendorView> results = new ArrayList<>();
+        for (User v : vendors) {
+            VendorProfile vp = getOrCreateVendorProfile(v);
+
+            // 1. Availability check:
+            // Must be open on checkDate at checkTime.
+            // Any vendors which were open before current time (closed before checkTime) will not be visible.
+            if (!vp.isOperatingAt(checkDate, checkTime)) {
+                continue;
+            }
+
+            // 2. Service check: Must support either Takeaway or Ready to Dine
+            boolean takeawayActive = vp.isTakeawayActiveAt(checkTime);
+            boolean readyToDineActive = vp.isReadyToDineActiveAt(checkTime);
+
+            if (!vp.isTakeawayEnabled() && !vp.isReadyToDineEnabled()) {
+                continue;
+            }
+
+            // 3. Service filter
+            if ("takeaway".equalsIgnoreCase(serviceFilter) && !takeawayActive) {
+                continue;
+            }
+            if ("dinein".equalsIgnoreCase(serviceFilter) && !readyToDineActive) {
+                continue;
+            }
+
+            // 4. Fetch cuisines for vendor
+            List<VendorCuisine> cuisines = (vendorCuisineRepository != null)
+                    ? vendorCuisineRepository.findByVendorAndActiveTrue(v)
+                    : List.of();
+            if (cuisines.isEmpty() && vendorCuisineRepository != null) {
+                cuisines = vendorCuisineRepository.findByVendorOrderByCuisineNameAsc(v);
+            }
+
+            // 5. Query matching
+            if (query != null && !query.trim().isEmpty()) {
+                String q = query.trim().toLowerCase();
+                boolean matchesVendor = (v.getName() != null && v.getName().toLowerCase().contains(q));
+                boolean matchesBusiness = (vp.getBusinessName() != null && vp.getBusinessName().toLowerCase().contains(q));
+                boolean matchesAddress = (vp.getBusinessAddress() != null && vp.getBusinessAddress().toLowerCase().contains(q))
+                        || (v.getCity() != null && v.getCity().toLowerCase().contains(q));
+                boolean matchesCuisine = cuisines.stream().anyMatch(c -> c.getCuisineName() != null && c.getCuisineName().toLowerCase().contains(q));
+
+                if (!matchesVendor && !matchesBusiness && !matchesAddress && !matchesCuisine) {
+                    continue;
+                }
+            }
+
+            results.add(new AvailableVendorView(v, vp, cuisines, true, takeawayActive, readyToDineActive));
+        }
+
+        return results;
+    }
+}

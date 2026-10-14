@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catering Event Logistics Sheet - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='3.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>Catering Event Logistics Order #<span th:text="${event.id}">1</span></h1>
+                <p class="page-subtitle">Complete event specifications, resource reservations, and delivery routing sheet</p>
+            </div>
+            <div>
+                <a th:if="${currentUserRole == 'VENDOR'}" th:href="@{/vendor/bookings}" class="btn btn-secondary">← Back to Bookings</a>
+                <a th:unless="${currentUserRole == 'VENDOR'}" th:href="@{/bookings/me}" class="btn btn-secondary">← Back to My Bookings</a>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div style="background: var(--bg-card); border-radius: var(--radius-md); padding: 1.25rem 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Status</span>
+                <div style="margin-top: 0.25rem;">
+                    <span class="status-badge" 
+                          th:classappend="${event.status.name() == 'CONFIRMED' ? 'status-confirmed' : (event.status.name() == 'PENDING' ? 'status-pending' : 'status-cancelled')}"
+                          style="font-size: 1rem; padding: 0.35rem 0.85rem;"
+                          th:text="${event.status}">CONFIRMED</span>
+                </div>
+            </div>
+
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">SERVICE MODEL</span>
+                <div style="margin-top: 0.25rem; font-weight: 700; color: var(--primary-color);" th:text="${event.serviceType.displayName}">
+                    Delivery with Serving Staff
+                </div>
+            </div>
+
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">EVENT DATE &amp; TIME</span>
+                <div style="margin-top: 0.25rem; font-weight: 700; color: var(--text-main);" th:text="${event.eventDate} + ' (' + (${event.eventTimeFrom != null ? event.eventTimeFrom : 'TBD'}) + ' - ' + (${event.eventTimeTo != null ? event.eventTimeTo : 'TBD'}) + ')'">
+                    2026-10-25 (12:00 - 16:00)
+                </div>
+            </div>
+
+            <div>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">GUESTS</span>
+                <div style="margin-top: 0.25rem; font-size: 1.25rem; font-weight: 800; color: var(--accent-color);" th:text="${event.guestCount} + ' People'">
+                    100 People
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+            
+            <!-- Left Column: Event & Resource Breakdown -->
+            <div>
+                <!-- Resource Allocation Card -->
+                <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                        📊 Finite Resource Allocation (Reserved Capacity)
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; text-align: center;">
+                        <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <div style="font-size: 1.5rem;">👨‍🍳</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);" th:text="${event.staffConsumed}">6</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Serving Staff</div>
+                        </div>
+
+                        <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <div style="font-size: 1.5rem;">🍽️</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-color);" th:text="${event.utensilsConsumed}">115</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Utensil Sets (15% buffer)</div>
+                        </div>
+
+                        <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <div style="font-size: 1.5rem;">🚚</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #0284c7;" th:text="${event.vehicleConsumed}">1</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Delivery Vehicle</div>
+                        </div>
+
+                        <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <div style="font-size: 1.5rem;">🏛️</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: #7c3aed;" th:text="${event.venueCoversConsumed}">0</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Venue Covers</div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Utilization Context -->
+                    <div th:if="${dailyUsage != null}" style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted); background: var(--bg-card-subtle); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                        <strong>Vendor Utilization on <span th:text="${event.eventDate}"></span>:</strong>
+                        Staff: <span th:text="${dailyUsage.staffUsed} + '/' + ${dailyUsage.staffTotal}"></span> •
+                        Utensils: <span th:text="${dailyUsage.utensilsUsed} + '/' + ${dailyUsage.utensilsTotal}"></span> •
+                        Vehicles: <span th:text="${dailyUsage.vehiclesUsed} + '/' + ${dailyUsage.vehiclesTotal}"></span> •
+                        Venue: <span th:text="${dailyUsage.venueCoversUsed} + '/' + ${dailyUsage.venueCoversTotal}"></span>
+                    </div>
+                </div>
+
+                <!-- Menu & Cuisine Card -->
+                <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                        🍲 Menu &amp; Cuisine Package
+                    </h3>
+                    <div th:if="${event.cuisine != null}">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <h4 style="font-size: 1.2rem; color: var(--text-main);" th:text="${event.cuisine.cuisineName}">Awadhi Feast</h4>
+                                <div style="margin-top: 0.35rem;">
+                                    <span class="role-badge badge-customer" th:text="${event.serviceStyle.displayName}">Buffet</span>
+                                    <span th:each="flag : ${event.cuisine.dietaryFlagList}" class="status-badge status-confirmed" style="margin-left: 0.25rem;" th:text="${flag.displayName}">Halal</span>
+                                </div>
+                            </div>
+                            <div th:if="${event.cuisine.pricePerHead != null}" style="text-align: right;">
+                                <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary-color);" th:text="'₹' + ${event.cuisine.pricePerHead}">₹650</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">per person</div>
+                            </div>
+                        </div>
+
+                        <p th:if="${event.cuisine.description}" style="margin-top: 1rem; font-size: 0.9rem; color: var(--secondary-color); line-height: 1.5;" th:text="${event.cuisine.description}"></p>
+                    </div>
+
+                    <div th:if="${event.cuisine == null}">
+                        <p style="font-size: 0.9rem; color: var(--text-muted); font-style: italic;">
+                            Custom / bespoke catering menu selected for this event.
+                        </p>
+                    </div>
+
+                    <div th:if="${event.specialNotes}" style="margin-top: 1.25rem; background: var(--accent-light); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-color);">
+                        <strong style="color: var(--accent-color);">Special Client Requests:</strong>
+                        <p style="font-size: 0.88rem; color: var(--text-main); margin-top: 0.25rem;" th:text="${event.specialNotes}"></p>
+                    </div>
+                </div>
+
+                <!-- Logistics & Routing Card -->
+                <div class="card" style="padding: 1.5rem;">
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                        📍 Logistics &amp; Destination Details
+                    </h3>
+
+                    <div th:if="${event.serviceType.requiresDeliveryAddress()}">
+                        <strong style="color: var(--text-main);">Drop-off / Setup Address:</strong>
+                        <p style="font-size: 0.95rem; color: var(--secondary-color); margin-top: 0.25rem;" th:text="${event.deliveryAddress}">123 Ocean Drive, Suite 400</p>
+                    </div>
+
+                    <div th:if="${event.serviceType.requiresPickupTime()}">
+                        <strong style="color: var(--text-main);">Customer Pickup Time Window:</strong>
+                        <p style="font-size: 0.95rem; color: var(--secondary-color); margin-top: 0.25rem;" th:text="${event.pickupTime}">12:30 PM - 1:00 PM</p>
+                    </div>
+
+                    <div th:if="${event.serviceType.name() == 'AT_VENUE'}">
+                        <strong style="color: var(--text-main);">Event Banquet Location:</strong>
+                        <p style="font-size: 0.95rem; color: var(--secondary-color); margin-top: 0.25rem;" th:text="${vendorProfile != null ? vendorProfile.businessAddress : 'Caterer Registered Premises'}"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Contacts & Action Controls -->
+            <div>
+                <!-- Customer Contact Card -->
+                <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--secondary-color); margin-bottom: 0.75rem;">👤 Customer Details</h4>
+                    <div style="font-weight: 700; font-size: 1.05rem;" th:text="${event.customer.name}">Jane Customer</div>
+                    <div th:if="${event.customer.organizationName}" style="font-size: 0.85rem; color: var(--text-muted);" th:text="${event.customer.organizationName}"></div>
+                    
+                    <div style="margin-top: 0.75rem; font-size: 0.9rem;">
+                        <div>📞 <strong th:text="${event.customer.phoneNumber != null ? event.customer.phoneNumber : 'Not provided'}"></strong></div>
+                        <div style="color: var(--text-muted); margin-top: 0.2rem;" th:text="${event.customer.email}"></div>
+                        <div style="color: var(--text-muted); margin-top: 0.2rem;" th:text="${event.customer.city} + (${event.customer.pincode != null ? ' - ' + event.customer.pincode : ''})"></div>
+                    </div>
+                </div>
+
+                <!-- Vendor Contact Card -->
+                <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <h4 style="color: var(--secondary-color); margin-bottom: 0.75rem;">🏪 Caterer Information</h4>
+                    <div style="font-weight: 700; font-size: 1.05rem;" th:text="${vendorProfile != null and vendorProfile.businessName != null ? vendorProfile.businessName : event.vendor.name}">Chef Mario Catering</div>
+                    <div style="margin-top: 0.75rem; font-size: 0.9rem;">
+                        <div>📞 <strong th:text="${vendorProfile != null and vendorProfile.businessPhone != null ? vendorProfile.businessPhone : event.vendor.phoneNumber}"></strong></div>
+                        <div style="color: var(--text-muted); margin-top: 0.2rem;" th:text="${event.vendor.email}"></div>
+                        <div th:if="${vendorProfile != null and vendorProfile.fssaiLicenseNo != null}" style="color: var(--text-muted); margin-top: 0.2rem;" th:text="'License: ' + ${vendorProfile.fssaiLicenseNo}"></div>
+                    </div>
+                </div>
+
+                <!-- State Actions Card -->
+                <div class="card" style="padding: 1.5rem;">
+                    <h4 style="color: var(--secondary-color); margin-bottom: 0.75rem;">⚡ Booking Actions</h4>
+                    
+                    <!-- Vendor Controls -->
+                    <div th:if="${currentUserRole == 'VENDOR' and event.status.name() == 'PENDING'}">
+                        <form th:action="@{/events/{id}/confirm(id=${event.id})}" method="post" style="margin-bottom: 0.75rem;">
+                            <button type="submit" class="btn btn-success btn-full">✓ Accept &amp; Confirm Booking</button>
+                        </form>
+                        <form th:action="@{/events/{id}/reject(id=${event.id})}" method="post" onsubmit="return confirm('Are you sure you want to reject this catering event?');">
+                            <button type="submit" class="btn btn-danger btn-full">✕ Reject Event</button>
+                        </form>
+                    </div>
+
+                    <!-- Customer Controls -->
+                    <div th:if="${currentUserRole == 'CUSTOMER' and event.status.name() != 'CANCELLED'}">
+                        <form th:action="@{/events/{id}/cancel(id=${event.id})}" method="post" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                            <button type="submit" class="btn btn-danger btn-full">Cancel This Booking</button>
+                        </form>
+                    </div>
+
+                    <div style="margin-top: 1rem; text-align: center;">
+                        <button onclick="window.print()" class="btn btn-secondary btn-sm" style="width: 100%;">🖨️ Print Logistics Sheet</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
