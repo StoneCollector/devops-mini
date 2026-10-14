@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Resource Pool - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>Vendor Operational Resource Pool</h1>
+                <p class="page-subtitle">Configure your finite personnel, inventory, and logistics capacity to automatically prevent overbooking</p>
+            </div>
+            <div>
+                <a th:href="@{/vendor/bookings}" class="btn btn-secondary">View Event Bookings</a>
+            </div>
+        </div>
+
+        <div class="alert alert-success" id="resourceSuccessAlert" th:if="${param.saved}">
+            Resource pool allocations updated successfully. Automatic capacity checks will use these limits.
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍🍳</div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary-color);" th:text="${pool.staffCount}">12</div>
+                <div style="font-weight: 600; color: var(--text-main);">Available Serving Staff</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Servers, Captains &amp; Kitchen</div>
+            </div>
+
+            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🍽️</div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: var(--accent-color);" th:text="${pool.utensilSets}">150</div>
+                <div style="font-weight: 600; color: var(--text-main);">Utensil &amp; Place Sets</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Plates, Cutlery &amp; Glassware</div>
+            </div>
+
+            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚚</div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: #0284c7;" th:text="${pool.deliveryVehicles}">3</div>
+                <div style="font-weight: 600; color: var(--text-main);">Delivery Vehicles</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Insulated transport fleet</div>
+            </div>
+
+            <div class="metric-card" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏛️</div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: #7c3aed;" th:text="${pool.venueCoverCapacity}">100</div>
+                <div style="font-weight: 600; color: var(--text-main);">Venue Cover Capacity</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Max seated guests at venue</div>
+            </div>
+        </div>
+
+        <div class="card" style="max-width: 850px; margin: 0 auto; padding: 2rem;">
+            <div style="margin-bottom: 1.5rem; background-color: var(--primary-light); padding: 1rem 1.25rem; border-radius: var(--radius-md); border-left: 4px solid var(--primary-color);">
+                <h4 style="color: var(--primary-color); margin-bottom: 0.25rem;">💡 How Automatic Resource Feasibility Works</h4>
+                <p style="font-size: 0.9rem; color: var(--secondary-color); line-height: 1.4;">
+                    Unlike naive slot booking, every customer booking request is checked against your daily resource pool:
+                    <strong>Staff</strong> (1 server / 15 guests + 1 captain if &gt;30 + 1 chef / 50 guests),
+                    <strong>Utensils</strong> (1.15 sets / guest with breakage buffer),
+                    <strong>Vehicles</strong> (1 vehicle per delivery event), and
+                    <strong>Venue Space</strong> (at-venue seating limits).
+                    If any resource exhausts on the requested date, the system prevents booking conflicts.
+                </p>
+            </div>
+
+            <form th:action="@{/vendor/resources}" method="post">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label for="staffCount">
+                            👨‍🍳 Total Serving Staff Available
+                        </label>
+                        <input type="number" id="staffCount" name="staffCount" class="form-control" 
+                               th:value="${pool.staffCount}" min="0" max="500" required>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Waitstaff, supervisors, and dedicated kitchen hands available for events.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="utensilSets">
+                            🍽️ Total Dining / Utensil Place Settings
+                        </label>
+                        <input type="number" id="utensilSets" name="utensilSets" class="form-control" 
+                               th:value="${pool.utensilSets}" min="0" max="5000" required>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Full dining sets (crockery, cutlery, napkins, glassware) in inventory.</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+                    <div class="form-group">
+                        <label for="deliveryVehicles">
+                            🚚 Delivery &amp; Logistics Vehicles
+                        </label>
+                        <input type="number" id="deliveryVehicles" name="deliveryVehicles" class="form-control" 
+                               th:value="${pool.deliveryVehicles}" min="0" max="50" required>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Vehicles available for simultaneous delivery runs on any given day.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="venueCoverCapacity">
+                            🏛️ At-Venue Seated Guest Capacity
+                        </label>
+                        <input type="number" id="venueCoverCapacity" name="venueCoverCapacity" class="form-control" 
+                               th:value="${pool.venueCoverCapacity}" min="0" max="2000" required>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Max guests your physical venue premises can seat (set to 0 if delivery-only).</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <a th:href="@{/vendor/slots}" class="btn btn-secondary">Back to Slots</a>
+                    <button type="submit" id="saveResourcesBtn" class="btn btn-primary">Update Resource Pool</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>

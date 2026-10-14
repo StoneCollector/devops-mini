@@ -2,6 +2,7 @@ package com.cbms.controller;
 
 import com.cbms.model.Role;
 import com.cbms.model.User;
+import com.cbms.model.VendorProfile;
 import com.cbms.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -36,24 +37,35 @@ public class AuthController {
                            @RequestParam(required = false) String email,
                            @RequestParam(required = false) String password,
                            @RequestParam(required = false, defaultValue = "CUSTOMER") String role,
+                           @RequestParam(required = false) String phoneNumber,
+                           @RequestParam(required = false) String addressLine,
+                           @RequestParam(required = false) String city,
+                           @RequestParam(required = false) String pincode,
+                           @RequestParam(required = false) String organizationName,
+                           @RequestParam(required = false) String gstNumber,
                            Model model) {
         model.addAttribute("name", name);
         model.addAttribute("email", email);
         model.addAttribute("role", role);
+        model.addAttribute("phoneNumber", phoneNumber);
+        model.addAttribute("addressLine", addressLine);
+        model.addAttribute("city", city);
+        model.addAttribute("pincode", pincode);
+        model.addAttribute("organizationName", organizationName);
+        model.addAttribute("gstNumber", gstNumber);
 
         try {
             Role userRole;
             try {
                 userRole = (role != null && !role.isBlank()) ? Role.valueOf(role.toUpperCase()) : Role.CUSTOMER;
                 if (userRole == Role.ADMIN) {
-                    // Do not allow public self-registration as admin
                     userRole = Role.CUSTOMER;
                 }
             } catch (IllegalArgumentException e) {
                 userRole = Role.CUSTOMER;
             }
 
-            userService.register(name, email, password, userRole);
+            userService.register(name, email, password, userRole, phoneNumber, addressLine, city, pincode, organizationName, gstNumber);
             return "redirect:/login?registered=true";
         } catch (IllegalArgumentException e) {
             String msg = e.getMessage();
@@ -64,6 +76,14 @@ public class AuthController {
                 model.addAttribute("emailError", msg);
             } else if (msg.contains("Password") || msg.contains("password")) {
                 model.addAttribute("passwordError", msg);
+            } else if (msg.contains("Phone")) {
+                model.addAttribute("phoneError", msg);
+            } else if (msg.contains("Address")) {
+                model.addAttribute("addressError", msg);
+            } else if (msg.contains("City")) {
+                model.addAttribute("cityError", msg);
+            } else if (msg.contains("Pincode")) {
+                model.addAttribute("pincodeError", msg);
             }
             return "register";
         } catch (Exception e) {
@@ -118,5 +138,77 @@ public class AuthController {
     public String logout(HttpSession session) {
         session.invalidate();
         return "redirect:/login?logout=true";
+    }
+
+    @GetMapping("/profile")
+    public String viewProfile(HttpSession session, Model model) {
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        Optional<User> userOpt = userService.findById(userId);
+        if (userOpt.isEmpty()) {
+            return "redirect:/login";
+        }
+
+        User user = userOpt.get();
+        model.addAttribute("user", user);
+
+        if (user.getRole() == Role.VENDOR) {
+            VendorProfile vendorProfile = userService.getOrCreateVendorProfile(user);
+            model.addAttribute("vendorProfile", vendorProfile);
+        }
+
+        return "profile";
+    }
+
+    @PostMapping("/profile")
+    public String updateProfile(@RequestParam String name,
+                                @RequestParam String phoneNumber,
+                                @RequestParam String addressLine,
+                                @RequestParam String city,
+                                @RequestParam String pincode,
+                                @RequestParam(required = false) String organizationName,
+                                @RequestParam(required = false) String gstNumber,
+                                // Vendor specific fields
+                                @RequestParam(required = false) String businessName,
+                                @RequestParam(required = false) String businessPhone,
+                                @RequestParam(required = false) String businessAddress,
+                                @RequestParam(required = false) Integer serviceRadius,
+                                @RequestParam(required = false) String fssaiLicenseNo,
+                                @RequestParam(required = false) Integer advanceBookingDays,
+                                HttpSession session,
+                                Model model) {
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            User updatedUser = userService.updateUserProfile(userId, name, phoneNumber, addressLine, city, pincode, organizationName, gstNumber);
+            session.setAttribute("userName", updatedUser.getName());
+
+            if (updatedUser.getRole() == Role.VENDOR && businessName != null) {
+                VendorProfile vp = userService.getOrCreateVendorProfile(updatedUser);
+                vp.setBusinessName(businessName.trim());
+                vp.setBusinessPhone(businessPhone != null ? businessPhone.trim() : phoneNumber);
+                vp.setBusinessAddress(businessAddress != null ? businessAddress.trim() : addressLine);
+                if (serviceRadius != null) vp.setServiceRadius(serviceRadius);
+                if (fssaiLicenseNo != null) vp.setFssaiLicenseNo(fssaiLicenseNo.trim());
+                if (advanceBookingDays != null) vp.setAdvanceBookingDays(advanceBookingDays);
+                userService.saveVendorProfile(vp);
+            }
+
+            return "redirect:/profile?updated=true";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            Optional<User> userOpt = userService.findById(userId);
+            userOpt.ifPresent(u -> model.addAttribute("user", u));
+            if (userOpt.isPresent() && userOpt.get().getRole() == Role.VENDOR) {
+                model.addAttribute("vendorProfile", userService.getOrCreateVendorProfile(userOpt.get()));
+            }
+            return "profile";
+        }
     }
 }

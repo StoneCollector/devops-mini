@@ -21,9 +21,76 @@
         </div>
 
         <!-- Feedback Alerts -->
+        <div class="alert alert-success" id="eventSuccessAlert" th:if="${param.eventSuccess}">Your catering event booking has been submitted! Feasible capacity is reserved, pending vendor confirmation.</div>
         <div class="alert alert-success" id="bookingSuccessAlert" th:if="${param.success}">Your catering booking was placed successfully! Status is currently PENDING vendor confirmation.</div>
         <div class="alert alert-info" id="bookingCancelledAlert" th:if="${param.cancelled}">Your booking has been cancelled and capacity has been released.</div>
+        <div class="alert alert-error" th:if="${param.error}" th:text="${param.error}"></div>
 
+        <!-- Section 1: Full Catering Events (v2) -->
+        <div th:if="${events != null and !#lists.isEmpty(events)}" style="margin-bottom: 2.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.4rem; color: var(--primary-color);">🍽️ Catering Events &amp; Service Orders</h2>
+                <a th:href="@{/events/book}" class="btn btn-accent btn-sm">+ Book New Event</a>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table" id="myEventsTable">
+                    <thead>
+                        <tr>
+                            <th>Event #</th>
+                            <th>Occasion &amp; Service</th>
+                            <th>Caterer</th>
+                            <th>Date &amp; Time</th>
+                            <th>Menu / Cuisine</th>
+                            <th>Guests</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ev : ${events}">
+                            <td style="font-weight: 700;" th:text="'#' + ${ev.id}">#1</td>
+                            <td>
+                                <div style="font-weight: 600;" th:text="${ev.occasionType.displayName}">Wedding</div>
+                                <span class="role-badge" 
+                                      th:classappend="${ev.serviceType.name() == 'DELIVERY_WITH_SERVING' ? 'badge-vendor' : (ev.serviceType.name() == 'AT_VENUE' ? 'badge-admin' : 'badge-customer')}"
+                                      style="font-size: 0.75rem; margin-top: 0.2rem;"
+                                      th:text="${ev.serviceType.displayName}">Delivery Only</span>
+                            </td>
+                            <td>
+                                <span th:text="${ev.vendor.name}" style="font-weight: 500;"></span>
+                                <div th:if="${ev.vendor.phoneNumber}" style="font-size: 0.8rem; color: var(--text-muted);" th:text="'📞 ' + ${ev.vendor.phoneNumber}"></div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;" th:text="${ev.eventDate}"></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="(${ev.eventTimeFrom != null ? ev.eventTimeFrom : ''}) + ' - ' + (${ev.eventTimeTo != null ? ev.eventTimeTo : ''})"></div>
+                            </td>
+                            <td>
+                                <span th:if="${ev.cuisine != null}" th:text="${ev.cuisine.cuisineName}">North Indian Feast</span>
+                                <span th:if="${ev.cuisine == null}" style="color: var(--text-muted); font-style: italic;">Standard Custom</span>
+                                <div th:if="${ev.serviceStyle != null}" style="font-size: 0.78rem; color: var(--text-muted);" th:text="${ev.serviceStyle.displayName}">Buffet</div>
+                            </td>
+                            <td style="font-weight: 600;" th:text="${ev.guestCount}">50</td>
+                            <td>
+                                <span class="status-badge" 
+                                      th:classappend="${ev.status.name() == 'CONFIRMED' ? 'status-confirmed' : (ev.status.name() == 'PENDING' ? 'status-pending' : 'status-cancelled')}"
+                                      th:text="${ev.status}">PENDING</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <a th:href="@{/events/{id}(id=${ev.id})}" class="btn btn-secondary btn-sm">Details</a>
+                                    <form th:if="${ev.status.name() != 'CANCELLED'}" th:action="@{/events/{id}/cancel(id=${ev.id})}" method="post" onsubmit="return confirm('Cancel this event booking?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 style="font-size: 1.25rem; color: var(--secondary-color); margin-bottom: 0.75rem;">Slot Bookings</h2>
         <div class="table-wrapper">
             <table class="data-table" id="myBookingsTable">
                 <thead>

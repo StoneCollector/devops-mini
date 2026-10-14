@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuisine Catalogue - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>Cuisine &amp; Menu Offerings</h1>
+                <p class="page-subtitle">Define the specialty cuisines, serving styles, dietary options, and pricing packages you offer</p>
+            </div>
+            <div>
+                <a th:href="@{/vendor/cuisines/new}" class="btn btn-primary" id="addCuisineBtn">+ Add New Cuisine</a>
+            </div>
+        </div>
+
+        <div class="alert alert-success" id="cuisineSuccessAlert" th:if="${param.created}">Cuisine package added to your catalogue successfully.</div>
+        <div class="alert alert-success" th:if="${param.updated}">Cuisine package updated successfully.</div>
+        <div class="alert alert-success" th:if="${param.deleted}">Cuisine package removed successfully.</div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Cuisine Name</th>
+                        <th>Serving Styles</th>
+                        <th>Dietary Flags</th>
+                        <th>Price / Head</th>
+                        <th>Guest Range</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${cuisines}">
+                        <td>
+                            <div style="font-weight: 700; color: var(--text-main);" th:text="${c.cuisineName}">North Indian Feast</div>
+                            <div th:if="${c.description}" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;" th:text="${c.description}"></div>
+                        </td>
+                        <td>
+                            <span th:each="style : ${c.serviceStyleList}" class="role-badge badge-customer" style="margin-right: 0.25rem; font-size: 0.75rem;" th:text="${style.displayName}">Buffet</span>
+                        </td>
+                        <td>
+                            <span th:each="flag : ${c.dietaryFlagList}" class="status-badge status-confirmed" style="margin-right: 0.25rem; font-size: 0.75rem;" th:text="${flag.displayName}">Vegetarian</span>
+                            <span th:if="${#lists.isEmpty(c.dietaryFlagList)}" style="color: var(--text-muted); font-size: 0.85rem;">Standard</span>
+                        </td>
+                        <td>
+                            <span th:if="${c.pricePerHead != null}" style="font-weight: 600; color: var(--primary-color);" th:text="'₹' + ${c.pricePerHead}">₹550</span>
+                            <span th:if="${c.pricePerHead == null}" style="color: var(--text-muted);">Custom</span>
+                        </td>
+                        <td th:text="${c.minGuests} + ' - ' + ${c.maxGuests} + ' guests'">15 - 500</td>
+                        <td>
+                            <span class="status-badge" th:classappend="${c.active ? 'status-active' : 'status-deactivated'}" th:text="${c.active ? 'ACTIVE' : 'INACTIVE'}">ACTIVE</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <a th:href="@{/vendor/cuisines/{id}/edit(id=${c.id})}" class="btn btn-secondary btn-sm">Edit</a>
+                                <form th:action="@{/vendor/cuisines/{id}/delete(id=${c.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this cuisine?');">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(cuisines)}">
+                        <td colspan="7" class="empty-row">
+                            You have not added any cuisines yet. Click <strong>"+ Add New Cuisine"</strong> to showcase what you cook!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>

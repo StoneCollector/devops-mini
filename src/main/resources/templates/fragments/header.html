@@ -13,7 +13,7 @@
 
             <nav class="nav-links">
                 <!-- Public / All Roles -->
-                <a th:href="@{/slots}" class="nav-link" id="navSlots">Browse Slots</a>
+                <a th:href="@{/slots}" class="nav-link" id="navSlots">Browse Catering</a>
 
                 <!-- Customer Links -->
                 <th:block th:if="${session.userRole == 'CUSTOMER'}">
@@ -22,15 +22,22 @@
 
                 <!-- Vendor Links -->
                 <th:block th:if="${session.userRole == 'VENDOR'}">
-                    <a th:href="@{/vendor/slots}" class="nav-link" id="navVendorSlots">My Slots</a>
-                    <a th:href="@{/vendor/slots/new}" class="nav-link btn-nav-action" id="navCreateSlot">+ Create Slot</a>
-                    <a th:href="@{/vendor/bookings}" class="nav-link" id="navVendorBookings">Bookings on My Slots</a>
+                    <a th:href="@{/vendor/bookings}" class="nav-link" id="navVendorBookings">Bookings &amp; Orders</a>
+                    <a th:href="@{/vendor/cuisines}" class="nav-link" id="navVendorCuisines">Cuisines</a>
+                    <a th:href="@{/vendor/resources}" class="nav-link" id="navVendorResources">Resource Pool</a>
+                    <a th:href="@{/vendor/slots}" class="nav-link" id="navVendorSlots">Slots</a>
+                    <a th:href="@{/vendor/slots/new}" class="nav-link btn-nav-action" id="navCreateSlot">+ New Slot</a>
                 </th:block>
 
                 <!-- Admin Links -->
                 <th:block th:if="${session.userRole == 'ADMIN'}">
                     <a th:href="@{/admin/bookings}" class="nav-link" id="navAdminBookings">All Bookings</a>
                     <a th:href="@{/admin/users}" class="nav-link" id="navAdminUsers">Manage Users</a>
+                </th:block>
+
+                <!-- Profile Link for any Logged-in User -->
+                <th:block th:if="${session.userId != null}">
+                    <a th:href="@{/profile}" class="nav-link" id="navProfile">My Profile</a>
                 </th:block>
             </nav>
 

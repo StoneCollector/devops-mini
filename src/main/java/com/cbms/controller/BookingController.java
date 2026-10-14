@@ -1,6 +1,7 @@
 package com.cbms.controller;
 
 import com.cbms.model.Booking;
+import com.cbms.model.CateringEvent;
 import com.cbms.model.Role;
 import com.cbms.model.User;
 import com.cbms.service.BookingService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -72,6 +74,13 @@ public class BookingController {
 
         List<Booking> bookings = bookingService.listBookingsForUser(userId);
         model.addAttribute("bookings", bookings);
+
+        Optional<User> userOpt = userService.findById(userId);
+        if (userOpt.isPresent()) {
+            List<CateringEvent> events = bookingService.getEventsForCustomer(userOpt.get());
+            model.addAttribute("events", events);
+        }
+
         return "my-bookings";
     }
 
@@ -110,8 +119,14 @@ public class BookingController {
             return "redirect:/login";
         }
 
-        List<Booking> bookings = bookingService.getBookingsForVendor(vendorOpt.get());
+        User vendor = vendorOpt.get();
+        List<Booking> bookings = bookingService.getBookingsForVendor(vendor);
+        List<CateringEvent> events = bookingService.getEventsForVendor(vendor);
+        BookingService.DailyResourceUsage todayUsage = bookingService.getResourceUsageOnDate(vendor.getId(), LocalDate.now());
+
         model.addAttribute("bookings", bookings);
+        model.addAttribute("events", events);
+        model.addAttribute("todayUsage", todayUsage);
         return "vendor-bookings";
     }
 
@@ -182,7 +197,9 @@ public class BookingController {
         }
 
         List<Booking> bookings = bookingService.listAllBookings();
+        List<CateringEvent> events = bookingService.getAllEvents();
         model.addAttribute("bookings", bookings);
+        model.addAttribute("events", events);
         return "admin-bookings";
     }
 }

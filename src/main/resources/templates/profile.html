@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Smart Catering Services</title>
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="page-container">
+        <div class="page-header">
+            <div class="page-title-group">
+                <h1>User Profile &amp; Contact Information</h1>
+                <p class="page-subtitle">Manage your verified contact details and catering business credentials</p>
+            </div>
+        </div>
+
+        <div class="alert alert-success" id="profileSuccessAlert" th:if="${param.updated}">
+            Profile details updated successfully.
+        </div>
+        <div class="alert alert-error" id="profileErrorAlert" th:if="${error}" th:text="${error}"></div>
+
+        <div class="card" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+            <form th:action="@{/profile}" method="post">
+                <h3 style="margin-bottom: 1rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                    Account &amp; Personal Contact
+                </h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" th:value="${user.name}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Login Email (System ID)</label>
+                        <input type="email" id="email" class="form-control" th:value="${user.email}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="phoneNumber">Direct Phone Number</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" class="form-control" th:value="${user.phoneNumber}" required placeholder="10-digit mobile number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Account Role</label>
+                        <input type="text" id="role" class="form-control" th:value="${user.role}" readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="addressLine">Street Address</label>
+                    <input type="text" id="addressLine" name="addressLine" class="form-control" th:value="${user.addressLine}" required placeholder="Flat / Building / Street">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" class="form-control" th:value="${user.city}" required placeholder="City name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pincode">Pincode</label>
+                        <input type="text" id="pincode" name="pincode" class="form-control" th:value="${user.pincode}" required placeholder="Postal Pincode">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="organizationName">Organization Name (Optional)</label>
+                        <input type="text" id="organizationName" name="organizationName" class="form-control" th:value="${user.organizationName}" placeholder="e.g. Acme Tech Corp">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gstNumber">GST Number (Optional)</label>
+                        <input type="text" id="gstNumber" name="gstNumber" class="form-control" th:value="${user.gstNumber}" placeholder="e.g. 27AAAAA0000A1Z5">
+                    </div>
+                </div>
+
+                <!-- Vendor Business Profile Section -->
+                <div th:if="${user.role.name() == 'VENDOR' and vendorProfile != null}" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">
+                        🏪 Catering Business Profile
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="businessName">Registered Business Name</label>
+                            <input type="text" id="businessName" name="businessName" class="form-control" th:value="${vendorProfile.businessName}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="businessPhone">Business Hotline / Order Phone</label>
+                            <input type="tel" id="businessPhone" name="businessPhone" class="form-control" th:value="${vendorProfile.businessPhone}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessAddress">Commercial Kitchen / Venue Address</label>
+                        <textarea id="businessAddress" name="businessAddress" class="form-control" rows="2" th:text="${vendorProfile.businessAddress}"></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="serviceRadius">Service Radius (KM)</label>
+                            <input type="number" id="serviceRadius" name="serviceRadius" class="form-control" th:value="${vendorProfile.serviceRadius}" min="1" max="100">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="advanceBookingDays">Notice Required (Days)</label>
+                            <input type="number" id="advanceBookingDays" name="advanceBookingDays" class="form-control" th:value="${vendorProfile.advanceBookingDays}" min="0" max="30">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fssaiLicenseNo">FSSAI / Health License</label>
+                            <input type="text" id="fssaiLicenseNo" name="fssaiLicenseNo" class="form-control" th:value="${vendorProfile.fssaiLicenseNo}" placeholder="FSSAI License">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <a th:href="@{/}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" id="saveProfileBtn" class="btn btn-primary">Save Profile Changes</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Smart Catering Services. All rights reserved.</p>
+    </footer>
+</body>
+</html>

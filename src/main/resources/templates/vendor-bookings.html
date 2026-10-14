@@ -21,10 +21,158 @@
         </div>
 
         <!-- Feedback Alerts -->
-        <div class="alert alert-success" id="bookingConfirmedAlert" th:if="${param.confirmed}">Customer booking has been confirmed!</div>
-        <div class="alert alert-info" id="bookingRejectedAlert" th:if="${param.rejected}">Booking rejected and slot capacity has been restored.</div>
+        <div class="alert alert-success" id="bookingConfirmedAlert" th:if="${param.confirmed}">Booking or event order confirmed successfully!</div>
+        <div class="alert alert-info" id="bookingRejectedAlert" th:if="${param.rejected}">Booking or event order rejected and capacity has been restored.</div>
         <div class="alert alert-error" id="bookingErrorAlert" th:if="${param.error}" th:text="${param.error}"></div>
 
+        <!-- Daily Resource Utilization Dashboard Widget -->
+        <div th:if="${todayUsage != null}" style="background: white; border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h3 style="font-size: 1.15rem; color: var(--text-main); margin: 0;">📊 Today's Active Resource Utilization</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Combined reservations across all active events &amp; services</p>
+                </div>
+                <a th:href="@{/vendor/resources}" class="btn btn-secondary btn-sm">⚙️ Configure Pool Limits</a>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <!-- Staff -->
+                <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+                        <span>👨‍🍳 Serving Staff</span>
+                        <span th:text="${todayUsage.staffUsed} + ' / ' + ${todayUsage.staffTotal}"></span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="background: var(--primary-color); height: 100%;" 
+                             th:styleappend="'width: ' + (${todayUsage.staffTotal > 0 ? (todayUsage.staffUsed * 100 / todayUsage.staffTotal) : 0}) + '%;'"></div>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        <span th:text="${todayUsage.staffAvailable} + ' staff available'"></span>
+                    </div>
+                </div>
+
+                <!-- Utensils -->
+                <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+                        <span>🍽️ Utensil Sets</span>
+                        <span th:text="${todayUsage.utensilsUsed} + ' / ' + ${todayUsage.utensilsTotal}"></span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="background: var(--accent-color); height: 100%;" 
+                             th:styleappend="'width: ' + (${todayUsage.utensilsTotal > 0 ? (todayUsage.utensilsUsed * 100 / todayUsage.utensilsTotal) : 0}) + '%;'"></div>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        <span th:text="${todayUsage.utensilsAvailable} + ' sets available'"></span>
+                    </div>
+                </div>
+
+                <!-- Vehicles -->
+                <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+                        <span>🚚 Delivery Vehicles</span>
+                        <span th:text="${todayUsage.vehiclesUsed} + ' / ' + ${todayUsage.vehiclesTotal}"></span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="background: #0284c7; height: 100%;" 
+                             th:styleappend="'width: ' + (${todayUsage.vehiclesTotal > 0 ? (todayUsage.vehiclesUsed * 100 / todayUsage.vehiclesTotal) : 0}) + '%;'"></div>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        <span th:text="${todayUsage.vehiclesAvailable} + ' vehicles free'"></span>
+                    </div>
+                </div>
+
+                <!-- Venue Covers -->
+                <div style="background: var(--bg-page); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+                        <span>🏛️ Venue Covers</span>
+                        <span th:text="${todayUsage.venueCoversUsed} + ' / ' + ${todayUsage.venueCoversTotal}"></span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
+                        <div style="background: #7c3aed; height: 100%;" 
+                             th:styleappend="'width: ' + (${todayUsage.venueCoversTotal > 0 ? (todayUsage.venueCoversUsed * 100 / todayUsage.venueCoversTotal) : 0}) + '%;'"></div>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        <span th:text="${todayUsage.venueCoversAvailable} + ' covers free'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Full Catering Event Orders (v2) -->
+        <div th:if="${events != null and !#lists.isEmpty(events)}" style="margin-bottom: 2.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="font-size: 1.4rem; color: var(--primary-color);">🛎️ Catering Event Service Requests</h2>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table" id="vendorEventsTable">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer Contact</th>
+                            <th>Event Details</th>
+                            <th>Service Model</th>
+                            <th>Cuisine &amp; Style</th>
+                            <th>Resource Snapshot</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ev : ${events}">
+                            <td style="font-weight: 700;" th:text="'#' + ${ev.id}">#1</td>
+                            <td>
+                                <strong th:text="${ev.customer.name}"></strong>
+                                <div th:if="${ev.customer.phoneNumber}" style="font-size: 0.82rem; color: var(--primary-color);" th:text="'📞 ' + ${ev.customer.phoneNumber}"></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="${ev.customer.email}"></div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;" th:text="${ev.occasionType.displayName}">Wedding</div>
+                                <div style="font-size: 0.85rem;" th:text="${ev.eventDate}"></div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="(${ev.eventTimeFrom != null ? ev.eventTimeFrom : ''}) + ' - ' + (${ev.eventTimeTo != null ? ev.eventTimeTo : ''})"></div>
+                                <div style="font-weight: 700; color: var(--accent-color);" th:text="${ev.guestCount} + ' Guests'"></div>
+                            </td>
+                            <td>
+                                <span class="role-badge" 
+                                      th:classappend="${ev.serviceType.name() == 'DELIVERY_WITH_SERVING' ? 'badge-vendor' : (ev.serviceType.name() == 'AT_VENUE' ? 'badge-admin' : 'badge-customer')}"
+                                      th:text="${ev.serviceType.displayName}">Delivery with Serving</span>
+                                <div th:if="${ev.deliveryAddress}" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;" th:text="'📍 ' + ${ev.deliveryAddress}"></div>
+                                <div th:if="${ev.pickupTime}" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;" th:text="'🥡 ' + ${ev.pickupTime}"></div>
+                            </td>
+                            <td>
+                                <div th:if="${ev.cuisine != null}" style="font-weight: 600;" th:text="${ev.cuisine.cuisineName}">North Indian</div>
+                                <div th:if="${ev.serviceStyle != null}" style="font-size: 0.8rem; color: var(--text-muted);" th:text="${ev.serviceStyle.displayName}">Buffet</div>
+                            </td>
+                            <td style="font-size: 0.82rem;">
+                                <div>👨‍🍳 Staff: <strong th:text="${ev.staffConsumed}"></strong></div>
+                                <div>🍽️ Utensils: <strong th:text="${ev.utensilsConsumed}"></strong></div>
+                                <div>🚚 Vehicle: <strong th:text="${ev.vehicleConsumed}"></strong></div>
+                            </td>
+                            <td>
+                                <span class="status-badge" 
+                                      th:classappend="${ev.status.name() == 'CONFIRMED' ? 'status-confirmed' : (ev.status.name() == 'PENDING' ? 'status-pending' : 'status-cancelled')}"
+                                      th:text="${ev.status}">PENDING</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                                    <a th:href="@{/events/{id}(id=${ev.id})}" class="btn btn-secondary btn-sm" style="text-align: center;">Logistics Sheet</a>
+                                    <div th:if="${ev.status.name() == 'PENDING'}" style="display: flex; gap: 0.25rem;">
+                                        <form th:action="@{/events/{id}/confirm(id=${ev.id})}" method="post">
+                                            <button type="submit" class="btn btn-success btn-sm">Confirm</button>
+                                        </form>
+                                        <form th:action="@{/events/{id}/reject(id=${ev.id})}" method="post" onsubmit="return confirm('Reject this catering event request?');">
+                                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 style="font-size: 1.25rem; color: var(--secondary-color); margin-bottom: 0.75rem;">Slot Bookings</h2>
         <div class="table-wrapper">
             <table class="data-table" id="vendorBookingsTable">
                 <thead>

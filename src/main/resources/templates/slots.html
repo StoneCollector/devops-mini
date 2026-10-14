@@ -23,6 +23,24 @@
         <!-- Feedback Alert -->
         <div class="alert alert-error" id="errorMessage" th:if="${error}" th:text="${error}"></div>
 
+        <!-- Custom Event Booking Callout -->
+        <div style="background: linear-gradient(135deg, #0f766e 0%, #1e293b 100%); color: white; border-radius: var(--radius-lg); padding: 1.5rem 2rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; box-shadow: var(--shadow-md);">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                    <span style="background: #f59e0b; color: #1e293b; font-size: 0.75rem; font-weight: 800; padding: 0.15rem 0.5rem; border-radius: var(--radius-sm); text-transform: uppercase;">New in v2</span>
+                    <h3 style="font-size: 1.35rem; font-weight: 700; color: white; margin: 0;">Need Catering for a Wedding, Corporate Event, or Party?</h3>
+                </div>
+                <p style="color: #cbd5e1; font-size: 0.92rem; margin: 0;">
+                    Choose from <strong>Delivery Only</strong>, <strong>Delivery with Full Serving Staff</strong>, <strong>At-Venue Banquets</strong>, or <strong>Takeaway</strong> with guaranteed capacity reservation.
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/events/book}" id="bookEventServiceBtn" class="btn btn-accent btn-lg" style="white-space: nowrap; font-weight: 700; padding: 0.75rem 1.75rem;">
+                    🍽️ Book Full Catering Service
+                </a>
+            </div>
+        </div>
+
         <!-- Filter Card -->
         <div class="filter-card">
             <form th:action="@{/slots}" method="get" class="filter-form">

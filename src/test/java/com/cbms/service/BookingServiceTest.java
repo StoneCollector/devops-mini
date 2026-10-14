@@ -1,18 +1,13 @@
 package com.cbms.service;
 
-import com.cbms.model.Booking;
-import com.cbms.model.BookingStatus;
-import com.cbms.model.CateringSlot;
-import com.cbms.model.Role;
-import com.cbms.model.User;
-import com.cbms.repository.BookingRepository;
-import com.cbms.repository.CateringSlotRepository;
-import com.cbms.repository.UserRepository;
+import com.cbms.model.*;
+import com.cbms.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,6 +20,9 @@ class BookingServiceTest {
     private BookingRepository bookingRepository;
     private CateringSlotRepository slotRepository;
     private UserRepository userRepository;
+    private CateringEventRepository cateringEventRepository;
+    private VendorResourcePoolRepository resourcePoolRepository;
+    private VendorCuisineRepository cuisineRepository;
     private BookingService bookingService;
 
     private User vendor1;
@@ -36,16 +34,29 @@ class BookingServiceTest {
         bookingRepository = Mockito.mock(BookingRepository.class);
         slotRepository = Mockito.mock(CateringSlotRepository.class);
         userRepository = Mockito.mock(UserRepository.class);
-        bookingService = new BookingService(bookingRepository, slotRepository, userRepository);
+        cateringEventRepository = Mockito.mock(CateringEventRepository.class);
+        resourcePoolRepository = Mockito.mock(VendorResourcePoolRepository.class);
+        cuisineRepository = Mockito.mock(VendorCuisineRepository.class);
+
+        bookingService = new BookingService(bookingRepository, slotRepository, userRepository,
+                cateringEventRepository, resourcePoolRepository, cuisineRepository);
 
         vendor1 = new User("Chef Mario", "mario@example.com", "pass123", Role.VENDOR, true);
         vendor1.setId(10L);
+        vendor1.setPhoneNumber("9876543201");
+        vendor1.setAddressLine("Andheri West");
+        vendor1.setCity("Mumbai");
+        vendor1.setPincode("400053");
 
         vendor2 = new User("Chef Luigi", "luigi@example.com", "pass123", Role.VENDOR, true);
         vendor2.setId(20L);
 
         customer = new User("Alice Smith", "alice@example.com", "pass123", Role.CUSTOMER, true);
         customer.setId(100L);
+        customer.setPhoneNumber("9876543202");
+        customer.setAddressLine("Bandra West");
+        customer.setCity("Mumbai");
+        customer.setPincode("400050");
     }
 
     @Test
@@ -280,5 +291,153 @@ class BookingServiceTest {
         assertEquals(10, slot.getSlotsBooked()); // 15 - 5 = 10
         verify(slotRepository).save(slot);
         verify(bookingRepository).save(booking);
+    }
+
+    // =========================================================================
+    // v2 Multi-Dimensional Resource Pool & Event Tests
+    // =========================================================================
+
+    @Test
+    void testCalculateStaffNeeded_IndustryRatios() {
+        // 15 guests DELIVERY_WITH_SERVING: 1 server + 0 captain + 1 kitchen = 2
+        assertEquals(2, bookingService.calculateStaffNeeded(15, ServiceType.DELIVERY_WITH_SERVING));
+
+        // 30 guests: ceil(30/15) = 2 servers + 0 captain (since not > 30) + ceil(30/50)=1 kitchen = 3
+        assertEquals(3, bookingService.calculateStaffNeeded(30, ServiceType.DELIVERY_WITH_SERVING));
+
+        // 60 guests: ceil(60/15) = 4 servers + 1 captain (60 > 30) + ceil(60/50)=2 kitchen = 7
+        assertEquals(7, bookingService.calculateStaffNeeded(60, ServiceType.DELIVERY_WITH_SERVING));
+
+        // 100 guests AT_VENUE: ceil(100/15)=7 + 1 captain + ceil(100/50)=2 kitchen = 10
+        assertEquals(10, bookingService.calculateStaffNeeded(100, ServiceType.AT_VENUE));
+
+        // DELIVERY_ONLY and TAKEAWAY do not consume serving staff
+        assertEquals(0, bookingService.calculateStaffNeeded(100, ServiceType.DELIVERY_ONLY));
+        assertEquals(0, bookingService.calculateStaffNeeded(100, ServiceType.TAKEAWAY));
+    }
+
+    @Test
+    void testCalculateUtensilsNeeded_15PercentBuffer() {
+        // 50 guests * 1.15 = 57.5 -> 58 sets
+        assertEquals(58, bookingService.calculateUtensilsNeeded(50, ServiceType.DELIVERY_WITH_SERVING));
+        assertEquals(58, bookingService.calculateUtensilsNeeded(50, ServiceType.AT_VENUE));
+
+        // 100 guests * 1.15 = 115 sets
+        assertEquals(115, bookingService.calculateUtensilsNeeded(100, ServiceType.DELIVERY_WITH_SERVING));
+
+        // DELIVERY_ONLY and TAKEAWAY do not consume utensil inventory
+        assertEquals(0, bookingService.calculateUtensilsNeeded(100, ServiceType.DELIVERY_ONLY));
+        assertEquals(0, bookingService.calculateUtensilsNeeded(100, ServiceType.TAKEAWAY));
+    }
+
+    @Test
+    void testCalculateVehiclesNeeded() {
+        assertEquals(1, bookingService.calculateVehiclesNeeded(ServiceType.DELIVERY_ONLY));
+        assertEquals(1, bookingService.calculateVehiclesNeeded(ServiceType.DELIVERY_WITH_SERVING));
+        assertEquals(0, bookingService.calculateVehiclesNeeded(ServiceType.AT_VENUE));
+        assertEquals(0, bookingService.calculateVehiclesNeeded(ServiceType.TAKEAWAY));
+    }
+
+    @Test
+    void testCalculateVenueCoversNeeded() {
+        assertEquals(80, bookingService.calculateVenueCoversNeeded(80, ServiceType.AT_VENUE));
+        assertEquals(0, bookingService.calculateVenueCoversNeeded(80, ServiceType.DELIVERY_ONLY));
+        assertEquals(0, bookingService.calculateVenueCoversNeeded(80, ServiceType.DELIVERY_WITH_SERVING));
+        assertEquals(0, bookingService.calculateVenueCoversNeeded(80, ServiceType.TAKEAWAY));
+    }
+
+    @Test
+    void testCheckResourceFeasibility_StaffExhaustionThrowsIllegalStateException() {
+        LocalDate date = LocalDate.now().plusDays(7);
+        // Vendor pool: 5 staff available
+        VendorResourcePool pool = new VendorResourcePool(vendor1, 5, 200, 3, 100);
+        when(resourcePoolRepository.findByVendorId(10L)).thenReturn(Optional.of(pool));
+        when(cateringEventRepository.findActiveEventsForVendorOnDate(eq(10L), eq(date), any())).thenReturn(Collections.emptyList());
+
+        // 60 guests with serving requires 7 staff (exceeds 5)
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                bookingService.checkResourceFeasibility(vendor1, date, ServiceType.DELIVERY_WITH_SERVING, 60));
+
+        assertTrue(ex.getMessage().contains("Serving staff capacity exhausted"));
+    }
+
+    @Test
+    void testCheckResourceFeasibility_UtensilsExhaustionThrowsIllegalStateException() {
+        LocalDate date = LocalDate.now().plusDays(7);
+        // Vendor pool: 30 utensil sets available
+        VendorResourcePool pool = new VendorResourcePool(vendor1, 20, 30, 3, 100);
+        when(resourcePoolRepository.findByVendorId(10L)).thenReturn(Optional.of(pool));
+        when(cateringEventRepository.findActiveEventsForVendorOnDate(eq(10L), eq(date), any())).thenReturn(Collections.emptyList());
+
+        // 50 guests requires 58 sets (exceeds 30)
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                bookingService.checkResourceFeasibility(vendor1, date, ServiceType.DELIVERY_WITH_SERVING, 50));
+
+        assertTrue(ex.getMessage().contains("Utensil sets exhausted"));
+    }
+
+    @Test
+    void testCheckResourceFeasibility_VehiclesExhaustionThrowsIllegalStateException() {
+        LocalDate date = LocalDate.now().plusDays(7);
+        // Vendor pool: 1 vehicle available
+        VendorResourcePool pool = new VendorResourcePool(vendor1, 20, 200, 1, 100);
+        when(resourcePoolRepository.findByVendorId(10L)).thenReturn(Optional.of(pool));
+
+        // Existing event already uses 1 vehicle
+        CateringEvent existing = new CateringEvent();
+        existing.setVehicleConsumed(1);
+        when(cateringEventRepository.findActiveEventsForVendorOnDate(eq(10L), eq(date), any()))
+                .thenReturn(List.of(existing));
+
+        // Second delivery request should be rejected
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                bookingService.checkResourceFeasibility(vendor1, date, ServiceType.DELIVERY_ONLY, 20));
+
+        assertTrue(ex.getMessage().contains("Delivery fleet fully booked"));
+    }
+
+    @Test
+    void testCheckResourceFeasibility_VenueCoversExhaustionThrowsIllegalStateException() {
+        LocalDate date = LocalDate.now().plusDays(7);
+        // Vendor pool: 50 venue covers
+        VendorResourcePool pool = new VendorResourcePool(vendor1, 20, 200, 3, 50);
+        when(resourcePoolRepository.findByVendorId(10L)).thenReturn(Optional.of(pool));
+        when(cateringEventRepository.findActiveEventsForVendorOnDate(eq(10L), eq(date), any())).thenReturn(Collections.emptyList());
+
+        // 75 guests at venue exceeds 50
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                bookingService.checkResourceFeasibility(vendor1, date, ServiceType.AT_VENUE, 75));
+
+        assertTrue(ex.getMessage().contains("Venue capacity exhausted"));
+    }
+
+    @Test
+    void testCreateEventBooking_SucceedsWithAccurateResourceSnapshots() {
+        LocalDate date = LocalDate.now().plusDays(10);
+        VendorResourcePool pool = new VendorResourcePool(vendor1, 15, 200, 4, 120);
+        when(resourcePoolRepository.findByVendorId(10L)).thenReturn(Optional.of(pool));
+        when(userRepository.findById(100L)).thenReturn(Optional.of(customer));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(vendor1));
+        when(cateringEventRepository.findActiveEventsForVendorOnDate(eq(10L), eq(date), any())).thenReturn(Collections.emptyList());
+        when(cateringEventRepository.save(any(CateringEvent.class))).thenAnswer(i -> {
+            CateringEvent e = i.getArgument(0);
+            e.setId(99L);
+            return e;
+        });
+
+        CateringEvent created = bookingService.createEventBooking(
+                100L, 10L, null,
+                OccasionType.CORPORATE, ServiceType.DELIVERY_WITH_SERVING, ServiceStyle.BUFFET,
+                date, "12:00", "15:00", 60,
+                "Setup in main conference room", "Tech Park, Building 2", null
+        );
+
+        assertNotNull(created);
+        assertEquals(BookingStatus.PENDING, created.getStatus());
+        assertEquals(7, created.getStaffConsumed()); // 4 servers + 1 captain + 2 kitchen
+        assertEquals(69, created.getUtensilsConsumed()); // 60 * 1.15
+        assertEquals(1, created.getVehicleConsumed());
+        assertEquals(0, created.getVenueCoversConsumed());
+        verify(cateringEventRepository, times(1)).save(any(CateringEvent.class));
     }
 }

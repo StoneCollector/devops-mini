@@ -23,6 +23,9 @@ public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private com.cbms.repository.VendorProfileRepository vendorProfileRepository;
+
     @InjectMocks
     private UserService userService;
 
@@ -155,5 +158,48 @@ public class UserServiceTest {
 
         assertFalse(updated.isActive());
         verify(userRepository, times(1)).save(testCustomer);
+    }
+
+    @Test
+    void register_WithContactInfo_SucceedsAndCreatesVendorProfileForVendor() {
+        when(userRepository.findByEmail("vendor.pro@example.com")).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        User vendor = userService.register("Pro Chef", "vendor.pro@example.com", "secure123", Role.VENDOR,
+                "9876543210", "42 Commercial Kitchen Rd", "Pune", "411001", "Pro Culinary Co", "27ABCDE1234F1Z5");
+
+        assertNotNull(vendor);
+        assertEquals("9876543210", vendor.getPhoneNumber());
+        assertEquals("Pune", vendor.getCity());
+        assertEquals("411001", vendor.getPincode());
+        assertEquals("Pro Culinary Co", vendor.getOrganizationName());
+        verify(vendorProfileRepository, times(1)).save(any(com.cbms.model.VendorProfile.class));
+    }
+
+    @Test
+    void register_WithShortPhoneNumber_ThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                userService.register("Short Phone", "short@example.com", "secure123", Role.CUSTOMER,
+                        "12345", "Street", "City", "400001", null, null));
+    }
+
+    @Test
+    void register_WithInvalidPincode_ThrowsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                userService.register("Bad Pin", "badpin@example.com", "secure123", Role.CUSTOMER,
+                        "9876543210", "Street", "City", "INVALID_PIN", null, null));
+    }
+
+    @Test
+    void updateUserProfile_ValidDetails_UpdatesSuccessfully() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        User updated = userService.updateUserProfile(1L, "John Doe Updated", "9988776655", "New Address", "Delhi", "110001", "New Org", "GST1234");
+
+        assertEquals("John Doe Updated", updated.getName());
+        assertEquals("9988776655", updated.getPhoneNumber());
+        assertEquals("Delhi", updated.getCity());
+        assertEquals("110001", updated.getPincode());
     }
 }
