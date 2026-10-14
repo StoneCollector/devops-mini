@@ -26,6 +26,9 @@ public class UserServiceTest {
     @Mock
     private com.cbms.repository.VendorProfileRepository vendorProfileRepository;
 
+    @Mock
+    private com.cbms.repository.VendorCuisineRepository vendorCuisineRepository;
+
     @InjectMocks
     private UserService userService;
 
@@ -201,5 +204,95 @@ public class UserServiceTest {
         assertEquals("9988776655", updated.getPhoneNumber());
         assertEquals("Delhi", updated.getCity());
         assertEquals("110001", updated.getPincode());
+    }
+
+    @Test
+    void getAvailableVendors_OpenNowVendor_IsReturned() {
+        when(userRepository.findAllByOrderByRoleAscNameAsc()).thenReturn(List.of(testVendor));
+
+        com.cbms.model.VendorProfile profile = new com.cbms.model.VendorProfile(testVendor, "Chef Mario Kitchen", "9876543201", "Mumbai");
+        profile.setOpeningTime(java.time.LocalTime.of(8, 0));
+        profile.setClosingTime(java.time.LocalTime.of(23, 59));
+        profile.setTakeawayEnabled(true);
+        profile.setReadyToDineEnabled(true);
+
+        when(vendorProfileRepository.findByVendor(testVendor)).thenReturn(Optional.of(profile));
+        when(vendorCuisineRepository.findByVendorAndActiveTrue(testVendor)).thenReturn(List.of());
+
+        java.time.LocalDate testDate = java.time.LocalDate.of(2026, 10, 14); // Wednesday
+        java.time.LocalTime testTime = java.time.LocalTime.of(15, 0); // 3 PM
+
+        List<com.cbms.dto.AvailableVendorView> results = userService.getAvailableVendors(testDate, testTime, "all", null);
+
+        assertEquals(1, results.size());
+        assertEquals("Chef Mario Kitchen", results.get(0).getProfile().getBusinessName());
+        assertTrue(results.get(0).isOpenNow());
+        assertTrue(results.get(0).isTakeawayActive());
+    }
+
+    @Test
+    void getAvailableVendors_VendorClosedBeforeCurrentTime_IsNotVisible() {
+        User morningVendor = new User("Sunrise Cafe", "sunrise@example.com", "pass123", Role.VENDOR, true);
+        morningVendor.setId(3L);
+
+        when(userRepository.findAllByOrderByRoleAscNameAsc()).thenReturn(List.of(morningVendor));
+
+        com.cbms.model.VendorProfile profile = new com.cbms.model.VendorProfile(morningVendor, "Sunrise Cafe", "9876543206", "Colaba");
+        profile.setOpeningTime(java.time.LocalTime.of(6, 0));
+        profile.setClosingTime(java.time.LocalTime.of(14, 0)); // Closed at 2 PM
+
+        when(vendorProfileRepository.findByVendor(morningVendor)).thenReturn(Optional.of(profile));
+
+        java.time.LocalDate testDate = java.time.LocalDate.of(2026, 10, 14);
+        java.time.LocalTime testTime = java.time.LocalTime.of(20, 0); // 8 PM (after 2 PM closing time)
+
+        List<com.cbms.dto.AvailableVendorView> results = userService.getAvailableVendors(testDate, testTime, "all", null);
+
+        // Vendor closed before current time must not be visible
+        assertTrue(results.isEmpty(), "Vendor who closed before current time must not be visible");
+    }
+
+    @Test
+    void getAvailableVendors_ReadyToDineFilter_ExcludesTakeawayOnlyVendors() {
+        when(userRepository.findAllByOrderByRoleAscNameAsc()).thenReturn(List.of(testVendor));
+
+        com.cbms.model.VendorProfile profile = new com.cbms.model.VendorProfile(testVendor, "Takeaway Express", "9876543201", "Mumbai");
+        profile.setOpeningTime(java.time.LocalTime.of(8, 0));
+        profile.setClosingTime(java.time.LocalTime.of(23, 59));
+        profile.setTakeawayEnabled(true);
+        profile.setReadyToDineEnabled(false); // No dine-in!
+
+        when(vendorProfileRepository.findByVendor(testVendor)).thenReturn(Optional.of(profile));
+
+        java.time.LocalDate testDate = java.time.LocalDate.of(2026, 10, 14);
+        java.time.LocalTime testTime = java.time.LocalTime.of(12, 0);
+
+        List<com.cbms.dto.AvailableVendorView> results = userService.getAvailableVendors(testDate, testTime, "dinein", null);
+
+        // Filter for dine-in should exclude vendor who only offers takeaway
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void vendorProfile_isOperatingAt_EdgeCases() {
+        com.cbms.model.VendorProfile vp = new com.cbms.model.VendorProfile();
+        vp.setOpeningTime(java.time.LocalTime.of(9, 0));
+        vp.setClosingTime(java.time.LocalTime.of(22, 0));
+        vp.setOperationalDays("MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY");
+
+        java.time.LocalDate wednesday = java.time.LocalDate.of(2026, 10, 14);
+        java.time.LocalDate sunday = java.time.LocalDate.of(2026, 10, 18);
+
+        // Within operational window on Wednesday
+        assertTrue(vp.isOperatingAt(wednesday, java.time.LocalTime.of(14, 0)));
+
+        // Before opening time
+        assertFalse(vp.isOperatingAt(wednesday, java.time.LocalTime.of(8, 30)));
+
+        // After closing time (open before current time)
+        assertFalse(vp.isOperatingAt(wednesday, java.time.LocalTime.of(22, 30)));
+
+        // Outside operational days (Sunday)
+        assertFalse(vp.isOperatingAt(sunday, java.time.LocalTime.of(14, 0)));
     }
 }

@@ -70,7 +70,9 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem;">
                         <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryOnly">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="radio" name="serviceType" value="DELIVERY_ONLY" checked onchange="updateServiceTypeFields(this.value)">
+                                <input type="radio" name="serviceType" value="DELIVERY_ONLY" 
+                                       th:checked="${selectedServiceType == 'DELIVERY_ONLY' or selectedServiceType == null}" 
+                                       onchange="updateServiceTypeFields(this.value)">
                                 <strong style="color: var(--text-main);">🚚 Delivery Only</strong>
                             </div>
                             <span style="font-size: 0.82rem; color: var(--text-muted);">Food delivered in insulated containers. Self-serving setup.</span>
@@ -78,7 +80,9 @@
 
                         <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optDeliveryServing">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="radio" name="serviceType" value="DELIVERY_WITH_SERVING" onchange="updateServiceTypeFields(this.value)">
+                                <input type="radio" name="serviceType" value="DELIVERY_WITH_SERVING" 
+                                       th:checked="${selectedServiceType == 'DELIVERY_WITH_SERVING'}" 
+                                       onchange="updateServiceTypeFields(this.value)">
                                 <strong style="color: var(--text-main);">👨‍🍳 Delivery with Serving Staff</strong>
                             </div>
                             <span style="font-size: 0.82rem; color: var(--text-muted);">Full catering delivery + buffet equipment + professional waitstaff.</span>
@@ -86,16 +90,20 @@
 
                         <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optAtVenue">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="radio" name="serviceType" value="AT_VENUE" onchange="updateServiceTypeFields(this.value)">
-                                <strong style="color: var(--text-main);">🏛️ At Venue Service</strong>
+                                <input type="radio" name="serviceType" value="AT_VENUE" 
+                                       th:checked="${selectedServiceType == 'AT_VENUE'}" 
+                                       onchange="updateServiceTypeFields(this.value)">
+                                <strong style="color: var(--text-main);">🍽️ Ready to Dine / At Venue</strong>
                             </div>
-                            <span style="font-size: 0.82rem; color: var(--text-muted);">Host your function directly at caterer's dedicated hall/banquet.</span>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);">Host your dinner or function directly at caterer's venue/restaurant.</span>
                         </label>
 
                         <label style="border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.3rem;" id="optTakeaway">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="radio" name="serviceType" value="TAKEAWAY" onchange="updateServiceTypeFields(this.value)">
-                                <strong style="color: var(--text-main);">🥡 Takeaway / Pickup</strong>
+                                <input type="radio" name="serviceType" value="TAKEAWAY" 
+                                       th:checked="${selectedServiceType == 'TAKEAWAY'}" 
+                                       onchange="updateServiceTypeFields(this.value)">
+                                <strong style="color: var(--text-main);">🥡 Takeaway / Self-Pickup</strong>
                             </div>
                             <span style="font-size: 0.82rem; color: var(--text-muted);">Trays packaged hot and ready for scheduled customer pickup.</span>
                         </label>
@@ -277,8 +285,15 @@
             }
         }
 
-        // Initialize estimates on load
-        document.addEventListener('DOMContentLoaded', calculateEstimates);
+        // Initialize estimates and fields on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkedRadio = document.querySelector('input[name="serviceType"]:checked');
+            if (checkedRadio) {
+                updateServiceTypeFields(checkedRadio.value);
+            } else {
+                calculateEstimates();
+            }
+        });
     </script>
 </body>
 </html>

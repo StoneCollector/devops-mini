@@ -20,6 +20,7 @@
                      th:text="${error}"></div>
 
                 <form th:action="@{/register}" method="post">
+                    <input type="hidden" name="redirect" th:value="${redirect != null ? redirect : param.redirect}">
                     <div class="form-group">
                         <label for="name">Full Name / Business Name</label>
                         <input type="text" id="name" name="name" class="form-control" 
@@ -96,7 +97,7 @@
 
                 <p style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
                     Already have an account? 
-                    <a th:href="@{/login}" id="loginLink" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign in here</a>
+                    <a th:href="@{/login(redirect=${redirect != null ? redirect : param.redirect})}" id="loginLink" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Sign in here</a>
                 </p>
             </div>
         </div>

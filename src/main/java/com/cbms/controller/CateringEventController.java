@@ -47,11 +47,25 @@ public class CateringEventController {
     @GetMapping("/events/book")
     public String showEventBookingForm(@RequestParam(required = false) Long vendorId,
                                        @RequestParam(required = false) Long cuisineId,
+                                       @RequestParam(required = false) String serviceType,
                                        HttpSession session,
                                        Model model) {
         Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
-            return "redirect:/login";
+            StringBuilder redirectUrl = new StringBuilder("/events/book");
+            boolean first = true;
+            if (vendorId != null) {
+                redirectUrl.append(first ? "?" : "&").append("vendorId=").append(vendorId);
+                first = false;
+            }
+            if (cuisineId != null) {
+                redirectUrl.append(first ? "?" : "&").append("cuisineId=").append(cuisineId);
+                first = false;
+            }
+            if (serviceType != null && !serviceType.isBlank()) {
+                redirectUrl.append(first ? "?" : "&").append("serviceType=").append(serviceType);
+            }
+            return "redirect:/login?bookingPrompt=true&redirect=" + java.net.URLEncoder.encode(redirectUrl.toString(), java.nio.charset.StandardCharsets.UTF_8);
         }
 
         Optional<User> userOpt = userService.findById(userId);
@@ -75,6 +89,7 @@ public class CateringEventController {
                 : List.of();
         model.addAttribute("cuisines", availableCuisines);
         model.addAttribute("selectedCuisineId", cuisineId);
+        model.addAttribute("selectedServiceType", serviceType != null ? serviceType : "DELIVERY_ONLY");
 
         // Fetch vendor resource pool & profile for context
         if (selectedVendorId != null) {

@@ -120,6 +120,64 @@
                             <input type="text" id="fssaiLicenseNo" name="fssaiLicenseNo" class="form-control" th:value="${vendorProfile.fssaiLicenseNo}" placeholder="FSSAI License">
                         </div>
                     </div>
+
+                    <!-- Takeaway & Ready-to-Dine Operational Controls -->
+                    <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem; color: #0f172a; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                        🕒 Operating Hours &amp; Service Availability
+                    </h4>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label for="openingTime">Daily Kitchen Opening Time</label>
+                            <input type="time" id="openingTime" name="openingTime" class="form-control" 
+                                   th:value="${vendorProfile.openingTime}">
+                            <small style="color: var(--text-muted); font-size: 0.78rem;">Kitchen becomes active for orders at this time</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="closingTime">Daily Kitchen Closing Time</label>
+                            <input type="time" id="closingTime" name="closingTime" class="form-control" 
+                                   th:value="${vendorProfile.closingTime}">
+                            <small style="color: var(--text-muted); font-size: 0.78rem;">Kitchen is hidden from live directory after closing time</small>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1rem;">
+                        <h5 style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: var(--text-main); font-weight: 700;">
+                            Services Offered to Customers
+                        </h5>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+                                <input type="checkbox" id="takeawayEnabled" name="takeawayEnabled" 
+                                       th:checked="${vendorProfile.takeawayEnabled}" style="width: 18px; height: 18px;">
+                                <span><strong>🥡 Offer Takeaway / Self-Pickup Service</strong> (Hot packaged meals ready for customer pickup)</span>
+                            </label>
+                        </div>
+
+                        <div style="border-top: 1px dashed var(--border-color); padding-top: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer; margin-bottom: 0.75rem;">
+                                <input type="checkbox" id="readyToDineEnabled" name="readyToDineEnabled" 
+                                       th:checked="${vendorProfile.readyToDineEnabled}" style="width: 18px; height: 18px;"
+                                       onchange="document.getElementById('dineInTimesGroup').style.display = this.checked ? 'grid' : 'none';">
+                                <span><strong>🍽️ Offer Ready to Dine (Dine-in at Venue / Restaurant Premises)</strong></span>
+                            </label>
+
+                            <div id="dineInTimesGroup" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; padding-left: 1.8rem;"
+                                 th:styleappend="${vendorProfile.readyToDineEnabled} ? '' : 'display: none;'">
+                                <div class="form-group">
+                                    <label for="readyToDineStartTime">Ready-to-Dine Seating Starts</label>
+                                    <input type="time" id="readyToDineStartTime" name="readyToDineStartTime" class="form-control"
+                                           th:value="${vendorProfile.readyToDineStartTime}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="readyToDineEndTime">Ready-to-Dine Seating Closes</label>
+                                    <input type="time" id="readyToDineEndTime" name="readyToDineEndTime" class="form-control"
+                                           th:value="${vendorProfile.readyToDineEndTime}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">

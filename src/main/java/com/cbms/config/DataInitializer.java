@@ -64,6 +64,34 @@ public class DataInitializer implements CommandLineRunner {
         } catch (Exception ignored) {
         }
 
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN opening_time TIME DEFAULT '08:00:00'");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN closing_time TIME DEFAULT '23:59:00'");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN takeaway_enabled BOOLEAN DEFAULT TRUE");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN ready_to_dine_enabled BOOLEAN DEFAULT TRUE");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN ready_to_dine_start_time TIME DEFAULT '11:00:00'");
+        } catch (Exception ignored) {}
+        try {
+            jdbcTemplate.execute("ALTER TABLE vendor_profiles ADD COLUMN ready_to_dine_end_time TIME DEFAULT '23:00:00'");
+        } catch (Exception ignored) {}
+
+        try {
+            jdbcTemplate.execute("UPDATE vendor_profiles SET takeaway_enabled = 1 WHERE takeaway_enabled IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET ready_to_dine_enabled = 1 WHERE ready_to_dine_enabled IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET opening_time = '08:00:00' WHERE opening_time IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET closing_time = '23:59:00' WHERE closing_time IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET ready_to_dine_start_time = '11:00:00' WHERE ready_to_dine_start_time IS NULL");
+            jdbcTemplate.execute("UPDATE vendor_profiles SET ready_to_dine_end_time = '23:00:00' WHERE ready_to_dine_end_time IS NULL");
+        } catch (Exception ignored) {}
+
         // 1. Ensure Admin seeded account exists with contact details
         User admin = userRepository.findByEmail("admin@smartcatering.com")
                 .orElseGet(() -> {
@@ -105,18 +133,98 @@ public class DataInitializer implements CommandLineRunner {
         if (customer.getOrganizationName() == null) customer.setOrganizationName("Acme Global Solutions");
         userRepository.save(customer);
 
-        // 4. Seed VendorProfile for Chef Mario
-        if (vendorProfileRepository.findByVendor(vendor).isEmpty()) {
-            VendorProfile vp = new VendorProfile(
-                    vendor,
-                    "Chef Mario Grand Catering & Banquets",
-                    "9876543201",
-                    "Plot 14, Kitchen Industrial Zone, Andheri West, Mumbai"
+        // 4. Seed VendorProfile for Chef Mario (Open 08:00 to 23:59, Takeaway: YES, Ready to Dine: YES)
+        VendorProfile vp = vendorProfileRepository.findByVendor(vendor)
+                .orElseGet(() -> new VendorProfile(
+                        vendor,
+                        "Chef Mario Grand Catering & Banquets",
+                        "9876543201",
+                        "Plot 14, Kitchen Industrial Zone, Andheri West, Mumbai"
+                ));
+        vp.setServiceRadius(35);
+        vp.setAdvanceBookingDays(2);
+        vp.setFssaiLicenseNo("FSSAI-11521000123456");
+        vp.setOpeningTime(java.time.LocalTime.of(8, 0));
+        vp.setClosingTime(java.time.LocalTime.of(23, 59));
+        vp.setTakeawayEnabled(true);
+        vp.setReadyToDineEnabled(true);
+        vp.setReadyToDineStartTime(java.time.LocalTime.of(11, 0));
+        vp.setReadyToDineEndTime(java.time.LocalTime.of(23, 0));
+        vendorProfileRepository.save(vp);
+
+        // 4b. Seed Vendor 2: Urban Spice Kitchen (Open 09:00 to 23:30, Takeaway: YES, Ready to Dine: NO)
+        User vendor2 = userRepository.findByEmail("urban.spice@smartcatering.com")
+                .orElseGet(() -> {
+                    User u = new User("Urban Spice Express", "urban.spice@smartcatering.com", "vendor123", Role.VENDOR, true);
+                    return userRepository.save(u);
+                });
+        vendor2.setActive(true);
+        if (vendor2.getPhoneNumber() == null) vendor2.setPhoneNumber("9876543205");
+        if (vendor2.getAddressLine() == null) vendor2.setAddressLine("Shop 12, Food Street, Bandra West");
+        if (vendor2.getCity() == null) vendor2.setCity("Mumbai");
+        if (vendor2.getPincode() == null) vendor2.setPincode("400050");
+        userRepository.save(vendor2);
+
+        VendorProfile vpSpice = vendorProfileRepository.findByVendor(vendor2)
+                .orElseGet(() -> new VendorProfile(
+                        vendor2,
+                        "Urban Spice Kitchen & Takeaway",
+                        "9876543205",
+                        "Shop 12, Food Street, Bandra West, Mumbai"
+                ));
+        vpSpice.setOpeningTime(java.time.LocalTime.of(9, 0));
+        vpSpice.setClosingTime(java.time.LocalTime.of(23, 30));
+        vpSpice.setTakeawayEnabled(true);
+        vpSpice.setReadyToDineEnabled(false); // Vendor chose NOT to keep ready to dine! Takeaway only!
+        vendorProfileRepository.save(vpSpice);
+
+        if (cuisineRepository.findByVendorOrderByCuisineNameAsc(vendor2).isEmpty()) {
+            VendorCuisine cSpice1 = new VendorCuisine(
+                    vendor2, "North Indian Dum Curries", "TAKEAWAY_BOX", 350.0, 1, 100, "HALAL",
+                    "Authentic Butter Chicken, Dal Makhani, Paneer Tikka Masala, and Tandoori Naan combos."
             );
-            vp.setServiceRadius(35);
-            vp.setAdvanceBookingDays(2);
-            vp.setFssaiLicenseNo("FSSAI-11521000123456");
-            vendorProfileRepository.save(vp);
+            VendorCuisine cSpice2 = new VendorCuisine(
+                    vendor2, "Mumbai Street Food Box", "BOX_MEAL", 220.0, 1, 150, "VEGETARIAN",
+                    "Crispy Pav Bhaji, Sev Puri, Dahi Batata Puri, and freshly pressed cutting chai."
+            );
+            cuisineRepository.save(cSpice1);
+            cuisineRepository.save(cSpice2);
+        }
+
+        // 4c. Seed Vendor 3: Sunrise Breakfast (Open 06:00 to 14:00 - CLOSED before current evening time!)
+        User vendor3 = userRepository.findByEmail("morning.brunch@smartcatering.com")
+                .orElseGet(() -> {
+                    User u = new User("Sunrise Bakery & Brunch", "morning.brunch@smartcatering.com", "vendor123", Role.VENDOR, true);
+                    return userRepository.save(u);
+                });
+        vendor3.setActive(true);
+        if (vendor3.getPhoneNumber() == null) vendor3.setPhoneNumber("9876543206");
+        if (vendor3.getAddressLine() == null) vendor3.setAddressLine("18 Heritage Arcade, Colaba Causeway");
+        if (vendor3.getCity() == null) vendor3.setCity("Mumbai");
+        if (vendor3.getPincode() == null) vendor3.setPincode("400005");
+        userRepository.save(vendor3);
+
+        VendorProfile vpBrunch = vendorProfileRepository.findByVendor(vendor3)
+                .orElseGet(() -> new VendorProfile(
+                        vendor3,
+                        "Sunrise Breakfast & Artisan Brunch",
+                        "9876543206",
+                        "18 Heritage Arcade, Colaba Causeway, Mumbai"
+                ));
+        vpBrunch.setOpeningTime(java.time.LocalTime.of(6, 0));
+        vpBrunch.setClosingTime(java.time.LocalTime.of(14, 0)); // Closed at 2 PM! Open before current time!
+        vpBrunch.setTakeawayEnabled(true);
+        vpBrunch.setReadyToDineEnabled(true);
+        vpBrunch.setReadyToDineStartTime(java.time.LocalTime.of(7, 0));
+        vpBrunch.setReadyToDineEndTime(java.time.LocalTime.of(13, 30));
+        vendorProfileRepository.save(vpBrunch);
+
+        if (cuisineRepository.findByVendorOrderByCuisineNameAsc(vendor3).isEmpty()) {
+            VendorCuisine cBrunch = new VendorCuisine(
+                    vendor3, "Artisan Morning Bakery Basket", "PLATED", 280.0, 1, 50, "VEGETARIAN",
+                    "Freshly baked sourdough croissants, brioche buns, eggs florentine, and pour-over coffee."
+            );
+            cuisineRepository.save(cBrunch);
         }
 
         // 5. Seed VendorResourcePool for Chef Mario (15 staff, 200 utensils, 4 vehicles, 120 venue covers)

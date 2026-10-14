@@ -631,3 +631,14 @@ body {
     font-size: 0.875rem;
     margin-top: auto;
 }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.9); }
+}
+
+.vendor-live-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md) !important;
+    border-color: #cbd5e1 !important;
+}

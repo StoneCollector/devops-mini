@@ -1,13 +1,19 @@
 package com.cbms.service;
 
+import com.cbms.dto.AvailableVendorView;
 import com.cbms.model.Role;
 import com.cbms.model.User;
+import com.cbms.model.VendorCuisine;
 import com.cbms.model.VendorProfile;
 import com.cbms.repository.UserRepository;
+import com.cbms.repository.VendorCuisineRepository;
 import com.cbms.repository.VendorProfileRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -19,15 +25,23 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final VendorProfileRepository vendorProfileRepository;
+    private final VendorCuisineRepository vendorCuisineRepository;
 
     public UserService(UserRepository userRepository) {
-        this(userRepository, null);
+        this(userRepository, null, null);
+    }
+
+    public UserService(UserRepository userRepository, VendorProfileRepository vendorProfileRepository) {
+        this(userRepository, vendorProfileRepository, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    public UserService(UserRepository userRepository, VendorProfileRepository vendorProfileRepository) {
+    public UserService(UserRepository userRepository,
+                       VendorProfileRepository vendorProfileRepository,
+                       VendorCuisineRepository vendorCuisineRepository) {
         this.userRepository = userRepository;
         this.vendorProfileRepository = vendorProfileRepository;
+        this.vendorCuisineRepository = vendorCuisineRepository;
     }
 
     public User register(String name, String email, String password) {
@@ -211,5 +225,73 @@ public class UserService {
 
     public User save(User user) {
         return userRepository.save(user);
+    }
+
+    /**
+     * Lists vendors who are active and available on the current date from the current system time.
+     * Any vendors whose operating window closed before the current time will NOT be returned.
+     * Vendors can offer Takeaways only or Ready to Dine (or both).
+     */
+    public List<AvailableVendorView> getAvailableVendors(LocalDate date, LocalTime time, String serviceFilter, String query) {
+        LocalDate checkDate = (date != null) ? date : LocalDate.now();
+        LocalTime checkTime = (time != null) ? time : LocalTime.now();
+
+        List<User> vendors = userRepository.findAllByOrderByRoleAscNameAsc().stream()
+                .filter(u -> u.getRole() == Role.VENDOR && u.isActive())
+                .toList();
+
+        List<AvailableVendorView> results = new ArrayList<>();
+        for (User v : vendors) {
+            VendorProfile vp = getOrCreateVendorProfile(v);
+
+            // 1. Availability check:
+            // Must be open on checkDate at checkTime.
+            // Any vendors which were open before current time (closed before checkTime) will not be visible.
+            if (!vp.isOperatingAt(checkDate, checkTime)) {
+                continue;
+            }
+
+            // 2. Service check: Must support either Takeaway or Ready to Dine
+            boolean takeawayActive = vp.isTakeawayActiveAt(checkTime);
+            boolean readyToDineActive = vp.isReadyToDineActiveAt(checkTime);
+
+            if (!vp.isTakeawayEnabled() && !vp.isReadyToDineEnabled()) {
+                continue;
+            }
+
+            // 3. Service filter
+            if ("takeaway".equalsIgnoreCase(serviceFilter) && !takeawayActive) {
+                continue;
+            }
+            if ("dinein".equalsIgnoreCase(serviceFilter) && !readyToDineActive) {
+                continue;
+            }
+
+            // 4. Fetch cuisines for vendor
+            List<VendorCuisine> cuisines = (vendorCuisineRepository != null)
+                    ? vendorCuisineRepository.findByVendorAndActiveTrue(v)
+                    : List.of();
+            if (cuisines.isEmpty() && vendorCuisineRepository != null) {
+                cuisines = vendorCuisineRepository.findByVendorOrderByCuisineNameAsc(v);
+            }
+
+            // 5. Query matching
+            if (query != null && !query.trim().isEmpty()) {
+                String q = query.trim().toLowerCase();
+                boolean matchesVendor = (v.getName() != null && v.getName().toLowerCase().contains(q));
+                boolean matchesBusiness = (vp.getBusinessName() != null && vp.getBusinessName().toLowerCase().contains(q));
+                boolean matchesAddress = (vp.getBusinessAddress() != null && vp.getBusinessAddress().toLowerCase().contains(q))
+                        || (v.getCity() != null && v.getCity().toLowerCase().contains(q));
+                boolean matchesCuisine = cuisines.stream().anyMatch(c -> c.getCuisineName() != null && c.getCuisineName().toLowerCase().contains(q));
+
+                if (!matchesVendor && !matchesBusiness && !matchesAddress && !matchesCuisine) {
+                    continue;
+                }
+            }
+
+            results.add(new AvailableVendorView(v, vp, cuisines, true, takeawayActive, readyToDineActive));
+        }
+
+        return results;
     }
 }

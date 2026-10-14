@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Smart Catering Services</title>
-    <link rel="stylesheet" th:href="@{/css/style.css(v='2.0')}">
+    <link rel="stylesheet" th:href="@{/css/style.css(v='2.1')}">
 </head>
 <body>
     <div th:replace="~{fragments/header :: header}"></div>
@@ -15,12 +15,21 @@
                 <h2>Welcome Back</h2>
                 <p class="auth-subtitle">Sign in to your Smart Catering Services account</p>
 
+                <!-- Booking Prompt Notice for Guests -->
+                <div class="alert alert-info" id="bookingPromptAlert" th:if="${param.bookingPrompt}" 
+                     style="background: #e0f2fe; border-left: 4px solid #0284c7; color: #0369a1; padding: 0.85rem 1rem; margin-bottom: 1.25rem; border-radius: var(--radius-sm); font-size: 0.88rem; line-height: 1.4;">
+                    🛎️ <strong>Almost there!</strong> Please sign in to finalize your takeaway order or table reservation.
+                </div>
+
                 <!-- Feedback Alerts -->
                 <div class="alert alert-error" id="errorMessage" th:if="${error}" th:text="${error}"></div>
                 <div class="alert alert-success" id="successMessage" th:if="${param.registered}">Registration successful! Please login with your credentials.</div>
                 <div class="alert alert-info" id="logoutMessage" th:if="${param.logout}">You have been successfully logged out.</div>
 
                 <form th:action="@{/login}" method="post">
+                    <!-- Preserve redirect URL after login -->
+                    <input type="hidden" name="redirect" th:value="${redirect != null ? redirect : param.redirect}">
+
                     <div class="form-group">
                         <label for="email">Email Address</label>
                         <input type="email" id="email" name="email" class="form-control" 
@@ -38,7 +47,7 @@
 
                 <p style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
                     Don't have an account? 
-                    <a th:href="@{/register}" id="registerLink" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Register here</a>
+                    <a th:href="@{/register(redirect=${redirect != null ? redirect : param.redirect})}" id="registerLink" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Register here</a>
                 </p>
             </div>
         </div>

@@ -13,7 +13,8 @@
 
             <nav class="nav-links">
                 <!-- Public / All Roles -->
-                <a th:href="@{/slots}" class="nav-link" id="navSlots">Browse Catering</a>
+                <a th:href="@{/}" class="nav-link" id="navLiveKitchens">Live Kitchens</a>
+                <a th:href="@{/slots}" class="nav-link" id="navSlots">Browse Slots</a>
 
                 <!-- Customer Links -->
                 <th:block th:if="${session.userRole == 'CUSTOMER'}">

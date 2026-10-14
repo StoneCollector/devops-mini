@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalTime;
 import java.util.Optional;
 
 @Controller
@@ -25,10 +28,11 @@ public class AuthController {
     }
 
     @GetMapping("/register")
-    public String registerPage(HttpSession session) {
+    public String registerPage(@RequestParam(required = false) String redirect, HttpSession session, Model model) {
         if (session.getAttribute("userId") != null) {
             return "redirect:/slots";
         }
+        model.addAttribute("redirect", redirect);
         return "register";
     }
 
@@ -43,6 +47,7 @@ public class AuthController {
                            @RequestParam(required = false) String pincode,
                            @RequestParam(required = false) String organizationName,
                            @RequestParam(required = false) String gstNumber,
+                           @RequestParam(required = false) String redirect,
                            Model model) {
         model.addAttribute("name", name);
         model.addAttribute("email", email);
@@ -53,6 +58,7 @@ public class AuthController {
         model.addAttribute("pincode", pincode);
         model.addAttribute("organizationName", organizationName);
         model.addAttribute("gstNumber", gstNumber);
+        model.addAttribute("redirect", redirect);
 
         try {
             Role userRole;
@@ -66,7 +72,11 @@ public class AuthController {
             }
 
             userService.register(name, email, password, userRole, phoneNumber, addressLine, city, pincode, organizationName, gstNumber);
-            return "redirect:/login?registered=true";
+            String target = "/login?registered=true";
+            if (redirect != null && !redirect.isBlank() && redirect.startsWith("/")) {
+                target += "&redirect=" + URLEncoder.encode(redirect, StandardCharsets.UTF_8);
+            }
+            return "redirect:" + target;
         } catch (IllegalArgumentException e) {
             String msg = e.getMessage();
             model.addAttribute("error", msg);
@@ -76,7 +86,7 @@ public class AuthController {
                 model.addAttribute("emailError", msg);
             } else if (msg.contains("Password") || msg.contains("password")) {
                 model.addAttribute("passwordError", msg);
-            } else if (msg.contains("Phone")) {
+            } else if (msg.contains("Phone") || msg.contains("phone")) {
                 model.addAttribute("phoneError", msg);
             } else if (msg.contains("Address")) {
                 model.addAttribute("addressError", msg);
@@ -93,22 +103,25 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String loginPage(HttpSession session) {
+    public String loginPage(@RequestParam(required = false) String redirect, HttpSession session, Model model) {
         if (session.getAttribute("userId") != null) {
             String role = (String) session.getAttribute("userRole");
             if ("VENDOR".equals(role)) return "redirect:/vendor/slots";
             if ("ADMIN".equals(role)) return "redirect:/admin";
             return "redirect:/slots";
         }
+        model.addAttribute("redirect", redirect);
         return "login";
     }
 
     @PostMapping("/login")
     public String login(@RequestParam String email, 
                         @RequestParam String password, 
+                        @RequestParam(required = false) String redirect,
                         HttpSession session, 
                         Model model) {
         model.addAttribute("email", email);
+        model.addAttribute("redirect", redirect);
 
         if (userService.isAccountDeactivated(email)) {
             model.addAttribute("error", "Your account has been deactivated. Please contact support.");
@@ -121,6 +134,10 @@ public class AuthController {
             session.setAttribute("userId", loggedIn.getId());
             session.setAttribute("userRole", loggedIn.getRole().name());
             session.setAttribute("userName", loggedIn.getName());
+
+            if (redirect != null && !redirect.isBlank() && redirect.startsWith("/")) {
+                return "redirect:" + redirect;
+            }
 
             if (loggedIn.getRole() == Role.VENDOR) {
                 return "redirect:/vendor/slots";
@@ -178,6 +195,12 @@ public class AuthController {
                                 @RequestParam(required = false) Integer serviceRadius,
                                 @RequestParam(required = false) String fssaiLicenseNo,
                                 @RequestParam(required = false) Integer advanceBookingDays,
+                                @RequestParam(required = false) String openingTime,
+                                @RequestParam(required = false) String closingTime,
+                                @RequestParam(required = false) String takeawayEnabled,
+                                @RequestParam(required = false) String readyToDineEnabled,
+                                @RequestParam(required = false) String readyToDineStartTime,
+                                @RequestParam(required = false) String readyToDineEndTime,
                                 HttpSession session,
                                 Model model) {
         Long userId = (Long) session.getAttribute("userId");
@@ -197,6 +220,22 @@ public class AuthController {
                 if (serviceRadius != null) vp.setServiceRadius(serviceRadius);
                 if (fssaiLicenseNo != null) vp.setFssaiLicenseNo(fssaiLicenseNo.trim());
                 if (advanceBookingDays != null) vp.setAdvanceBookingDays(advanceBookingDays);
+
+                if (openingTime != null && !openingTime.isBlank()) {
+                    try { vp.setOpeningTime(LocalTime.parse(openingTime.trim())); } catch (Exception ignored) {}
+                }
+                if (closingTime != null && !closingTime.isBlank()) {
+                    try { vp.setClosingTime(LocalTime.parse(closingTime.trim())); } catch (Exception ignored) {}
+                }
+                vp.setTakeawayEnabled("on".equalsIgnoreCase(takeawayEnabled) || "true".equalsIgnoreCase(takeawayEnabled));
+                vp.setReadyToDineEnabled("on".equalsIgnoreCase(readyToDineEnabled) || "true".equalsIgnoreCase(readyToDineEnabled));
+                if (readyToDineStartTime != null && !readyToDineStartTime.isBlank()) {
+                    try { vp.setReadyToDineStartTime(LocalTime.parse(readyToDineStartTime.trim())); } catch (Exception ignored) {}
+                }
+                if (readyToDineEndTime != null && !readyToDineEndTime.isBlank()) {
+                    try { vp.setReadyToDineEndTime(LocalTime.parse(readyToDineEndTime.trim())); } catch (Exception ignored) {}
+                }
+
                 userService.saveVendorProfile(vp);
             }
 
