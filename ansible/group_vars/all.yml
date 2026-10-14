@@ -1,0 +1,29 @@
+---
+# Application settings
+app_name: cbms
+app_user: cbms
+app_group: cbms
+app_port: 8088
+app_image: stonecollector/cbms
+app_image_tag: latest
+
+# Directories & Configuration
+app_dir: /opt/cbms
+log_dir: /opt/cbms/logs
+config_dir: /etc/cbms
+env_file_path: /etc/cbms/app.env
+
+# Database settings
+db_name: cbms_db
+db_user: root
+db_password: root
+db_host: cbms-db
+db_port: 3306
+
+# Required system packages
+required_packages:
+  - openjdk-21-jre-headless
+  - docker.io
+  - curl
+  - python3
+  - python3-docker

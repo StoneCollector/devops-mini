@@ -20,7 +20,7 @@
                 </div>
 
                 <!-- Feedback Alert -->
-                <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+                <div class="alert alert-error" id="slotErrorAlert" th:if="${error}" th:text="${error}"></div>
 
                 <form th:action="${isEdit ? '/vendor/slots/' + slot.id : '/vendor/slots'}" method="post">
                     <div class="form-group">
@@ -51,8 +51,8 @@
                     </div>
 
                     <div class="actions-group" style="margin-top: 1.5rem;">
-                        <button type="submit" class="btn btn-primary" th:text="${isEdit ? 'Save Changes' : 'Publish Slot'}">Submit</button>
-                        <a th:href="@{/vendor/slots}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" id="slotSubmitBtn" class="btn btn-primary" th:text="${isEdit ? 'Save Changes' : 'Publish Slot'}">Submit</button>
+                        <a th:href="@{/vendor/slots}" id="cancelSlotBtn" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

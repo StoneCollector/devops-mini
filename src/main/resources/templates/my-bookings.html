@@ -21,11 +21,11 @@
         </div>
 
         <!-- Feedback Alerts -->
-        <div class="alert alert-success" th:if="${param.success}">Your catering booking was placed successfully! Status is currently PENDING vendor confirmation.</div>
-        <div class="alert alert-info" th:if="${param.cancelled}">Your booking has been cancelled and capacity has been released.</div>
+        <div class="alert alert-success" id="bookingSuccessAlert" th:if="${param.success}">Your catering booking was placed successfully! Status is currently PENDING vendor confirmation.</div>
+        <div class="alert alert-info" id="bookingCancelledAlert" th:if="${param.cancelled}">Your booking has been cancelled and capacity has been released.</div>
 
         <div class="table-wrapper">
-            <table class="data-table">
+            <table class="data-table" id="myBookingsTable">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -38,17 +38,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="booking : ${bookings}">
-                        <td style="font-weight: 600;" th:text="${booking.slot.date}"></td>
-                        <td th:text="${booking.slot.timeSlot}"></td>
-                        <td th:text="${booking.slot.menuType}"></td>
-                        <td>
+                    <tr th:each="booking : ${bookings}" th:id="'booking-row-' + ${booking.id}">
+                        <td style="font-weight: 600;" th:id="'booking-date-' + ${booking.id}" th:text="${booking.slot.date}"></td>
+                        <td th:id="'booking-time-' + ${booking.id}" th:text="${booking.slot.timeSlot}"></td>
+                        <td th:id="'booking-menu-' + ${booking.id}" th:text="${booking.slot.menuType}"></td>
+                        <td th:id="'booking-vendor-' + ${booking.id}">
                             <span th:if="${booking.slot.vendor != null}" th:text="${booking.slot.vendor.name}" style="font-weight: 500;"></span>
                             <span th:if="${booking.slot.vendor == null}" style="color: var(--text-muted);">Smart Catering Chef</span>
                         </td>
-                        <td th:text="${booking.numberOfGuests}"></td>
+                        <td th:id="'booking-guests-' + ${booking.id}" th:text="${booking.numberOfGuests}"></td>
                         <td>
                             <span class="status-badge"
+                                  th:id="'booking-status-' + ${booking.id}"
                                   th:classappend="${booking.status.name() == 'CONFIRMED' ? 'status-confirmed' : (booking.status.name() == 'CANCELLED' ? 'status-cancelled' : 'status-pending')}"
                                   th:text="${booking.status}">
                             </span>
@@ -58,17 +59,17 @@
                                   th:action="@{/bookings/{id}/cancel(id=${booking.id})}" 
                                   method="post" 
                                   onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                                <button type="submit" class="btn btn-danger btn-sm">Cancel Booking</button>
+                                <button type="submit" th:id="'cancel-btn-' + ${booking.id}" class="btn btn-danger btn-sm">Cancel Booking</button>
                             </form>
-                            <span th:if="${booking.status.name() == 'CANCELLED'}" style="color: var(--text-muted); font-size: 0.85rem;">
+                            <span th:if="${booking.status.name() == 'CANCELLED'}" th:id="'cancelled-text-' + ${booking.id}" style="color: var(--text-muted); font-size: 0.85rem;">
                                 Cancelled
                             </span>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(bookings)}">
-                        <td colspan="7" class="empty-row">
+                        <td colspan="7" class="empty-row" id="noBookingsRow">
                             You have no catering bookings yet. 
-                            <a th:href="@{/slots}" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Browse available slots</a> to make your first reservation!
+                            <a th:href="@{/slots}" id="browseSlotsLink" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Browse available slots</a> to make your first reservation!
                         </td>
                     </tr>
                 </tbody>

@@ -1,0 +1,146 @@
+---
+# ==============================================================================
+# Ansible Playbook: Provisioning and Deployment for Smart Catering Services (CBMS)
+# Week 13: Configuration Management
+# Modules Used: apt, user, file, template, service, community.docker
+# ==============================================================================
+
+- name: Configure and Deploy Smart Catering Services (CBMS)
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    # --------------------------------------------------------------------------
+    # 1. PACKAGES: Install required dependencies using the apt module
+    # --------------------------------------------------------------------------
+    - name: Update apt cache and install required system packages
+      ansible.builtin.apt:
+        name: "{{ required_packages }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    # --------------------------------------------------------------------------
+    # 2. USER: Create cbms system user and add to docker group
+    # --------------------------------------------------------------------------
+    - name: Ensure docker system group exists
+      ansible.builtin.group:
+        name: docker
+        state: present
+
+    - name: Create cbms system user and add to docker group
+      ansible.builtin.user:
+        name: "{{ app_user }}"
+        comment: "CBMS Service User"
+        shell: /bin/bash
+        system: true
+        create_home: true
+        groups:
+          - docker
+        append: true
+        state: present
+
+    # --------------------------------------------------------------------------
+    # 3. FOLDERS: Create application and log directories
+    # --------------------------------------------------------------------------
+    - name: Create application directories (/opt/cbms, /opt/cbms/logs, /etc/cbms)
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0750'
+      loop:
+        - "{{ app_dir }}"
+        - "{{ log_dir }}"
+        - "{{ config_dir }}"
+
+    # --------------------------------------------------------------------------
+    # 4. FILES: Template environment file with strict mode 0600
+    # --------------------------------------------------------------------------
+    - name: Template application environment file (/etc/cbms/app.env)
+      ansible.builtin.template:
+        src: templates/app.env.j2
+        dest: "{{ env_file_path }}"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0600'
+
+    - name: Template systemd service unit file (/etc/systemd/system/cbms.service)
+      ansible.builtin.template:
+        src: templates/cbms.service.j2
+        dest: /etc/systemd/system/cbms.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    # --------------------------------------------------------------------------
+    # 5. SERVICES: Ensure Docker service is enabled and started
+    # --------------------------------------------------------------------------
+    - name: Ensure Docker daemon service is enabled and started
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+      ignore_errors: true
+
+    # --------------------------------------------------------------------------
+    # 6. DOCKER CONTAINERS: Orchestrate network, MySQL DB, and CBMS application
+    # --------------------------------------------------------------------------
+    - name: Ensure cbms-net user-defined Docker bridge network exists
+      community.docker.docker_network:
+        name: cbms-net
+        state: present
+
+    - name: Deploy MySQL 8 database container (cbms-db)
+      community.docker.docker_container:
+        name: cbms-db
+        image: mysql:8
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: cbms-net
+        env:
+          MYSQL_ROOT_PASSWORD: "{{ db_password }}"
+          MYSQL_DATABASE: "{{ db_name }}"
+        published_ports:
+          - "3306:3306"
+        volumes:
+          - cbms-db-data:/var/lib/mysql
+
+    - name: Pull latest CBMS application Docker image
+      community.docker.docker_image:
+        name: "{{ app_image }}:{{ app_image_tag }}"
+        source: pull
+        state: present
+
+    - name: Ensure existing cbms-app container is removed
+      community.docker.docker_container:
+        name: cbms-app
+        state: absent
+
+    - name: Deploy CBMS application container (cbms-app)
+      community.docker.docker_container:
+        name: cbms-app
+        image: "{{ app_image }}:{{ app_image_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: cbms-net
+        env_file: "{{ env_file_path }}"
+        published_ports:
+          - "{{ app_port }}:{{ app_port }}"
+
+    # --------------------------------------------------------------------------
+    # 7. VERIFICATION: Perform HTTP health check
+    # --------------------------------------------------------------------------
+    - name: Wait for CBMS application to become healthy on port {{ app_port }}
+      ansible.builtin.uri:
+        url: "http://localhost:{{ app_port }}"
+        status_code: 200
+        timeout: 5
+      register: app_health
+      until: app_health.status == 200
+      retries: 12
+      delay: 5
